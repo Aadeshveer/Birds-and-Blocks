@@ -1,4 +1,5 @@
 import pygame as pygame
+from scripts.blockmap import Block, BlockMap
 from scripts.utils import load_image, load_images
 
 class game():
@@ -11,44 +12,37 @@ class game():
         self.window = pygame.display.set_mode((1280,720))
 
         self.assets = {
-            'background' : load_images('backgrounds'),
-            'projectile/basic' : load_image('projectiles/basic/0.png')
+            'projectile/basic' : load_image('projectiles/basic/0.png'),
+            'background' : load_images('background'),
         }
         
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
         self.display = pygame.Surface((1280,720))
-        
+
         # scales the display to window for zoom effect
         self.scaling_factor = 1
 
         # moves the window for scroll effet
         self.off_set = [-160, -90]
 
+        # initializing clock
         self.clock = pygame.time.Clock()
-
-        self.test_img = pygame.image.load('test.png')
-
     
     def run(self):
-        self.big = True
-        while True:
-            self.window.fill((0, 0, 0))
+        self.block_map = BlockMap((40,640),{(0,0):Block('wood'),(0,-64):Block('wood'),(64,0):Block('wood')})
 
-            if self.big:
-                self.scaling_factor += 0.001
-                if self.scaling_factor >= 2:
-                    self.big=False
-            else:
-                self.scaling_factor -= 0.001
-                if self.scaling_factor <= 1:
-                    self.big=True
-            print(self.scaling_factor)
+        while True:
+            self.display.fill('#87CEEB')
+
 # [Taking input] --------------------------------------------------------------------------------- #
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit(0)
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.scaling_factor = 2
 
 
             mpos = pygame.mouse.get_pos()
@@ -84,13 +78,18 @@ class game():
 
 # [Updating the screen] -------------------------------------------------------------------------- #
 
-            self.display.blit(pygame.transform.scale(self.test_img, self.display.size), (0, 0))
-            for background in self.assets['background']:
-                self.display.blit(pygame.transform.scale(
-                    background,
-                    (self.display.get_width(),
-                    self.display.get_height())
-                ), (0, 0))
+            for img in self.assets['background']:
+                self.display.blit(
+                    pygame.transform.scale(img,
+                        (
+                            self.display.get_width(),
+                            self.display.get_height()
+                        )
+                    ),
+                    (0, 0)
+                )
+
+            self.block_map.render(self.display)
 
             self.window.blit(
                 pygame.transform.scale(
