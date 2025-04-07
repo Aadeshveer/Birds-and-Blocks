@@ -26,12 +26,8 @@ class Bird:
         pos[1] += self.v.imag
         self.v = self.v.real + 1j * min(self.v.imag + 1/6, 5)
         self.pos = tuple(pos)
-        if 0 < self.pos[0] < self.map_size[0] - self.width and 0 < self.pos[1] < self.map_size[1]:
-            return True
-        self.mode = 'idle'
-        self.pos = self.origin
-        return False
-
+        if not (0 < self.pos[0] < self.map_size[0] - self.width and 0 < self.pos[1] < self.map_size[1]):
+            raise Exception('Bird out of bounds')
 
     def update(self, mpos):
         '''
@@ -39,13 +35,10 @@ class Bird:
         Returns True if scrolling is allowed else False
         '''
         if self.mode == 'in_air':
-            if self.calculate_next_pos():
-                return False
-            else:
-                return True
+            self.calculate_next_pos()
 
         if self.mode == 'ready':
-            if pygame.mouse.get_pressed()[0]:
+            if pygame.mouse.get_pressed()[0] and math.dist(self.origin, mpos) < 20:
                 self.mode = 'aiming'
             return False
 
