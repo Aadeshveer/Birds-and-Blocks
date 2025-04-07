@@ -5,7 +5,7 @@ class BlockMap:
     
     def __init__(self, origin, map = None):
         '''
-        Origin is a tuuple of ints representing the origin of block printing
+        Origin is a tuple of ints representing the origin of block printing
         Map is a dictionary of format { (int, int): type ... }
         '''
         self.origin = origin

@@ -38,7 +38,7 @@ class game():
     
     def run(self):
 
-        bird = Bird((290,560), 'idle')
+        bird = Bird((self.display.get_width(), self.display.get_height()),(290,560), 'idle')
 
         while True:
             self.display.fill('#87CEEB')
@@ -50,9 +50,11 @@ class game():
                     pygame.quit()
                     exit(0)
 
-            self.scaling_factor = 1
-            if pygame.mouse.get_pressed()[2]:
-                self.scaling_factor = 2
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.scrolling:
+                        if pygame.mouse.get_pressed()[2]:
+                            self.scaling_factor = 2 if self.scaling_factor==1 else 1
+
             if pygame.mouse.get_pressed()[1]:
                 bird.mode = 'ready'
 
@@ -88,9 +90,14 @@ class game():
                     self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
                 )
 
+            print(self.scaling_factor)
 # [Updating the screen] -------------------------------------------------------------------------- #
+            mpos = pygame.mouse.get_pos()
 
-            self.scrolling = bird.update([i * self.scaling_factor // 2 for i in mpos])
+            self.scrolling = bird.update([
+                (mpos[0] - self.off_set[0]) * self.scaling_factor / 2,
+                (mpos[1] - self.off_set[1]) *self.scaling_factor/2
+            ])
 
             # blits the background mountains/scene
             self.display.blit(
@@ -103,7 +110,7 @@ class game():
                 (0, 0)
             )
 
-            # blits the slingshot 1
+            # blits arm 1 of slingshot 1
             self.display.blit(
                 self.assets['launcher'][0],
                 (
@@ -112,8 +119,31 @@ class game():
                 )
             )
 
-            bird.render(self.display)
+            if self.scrolling:
+                _ = bird.render(self.display, self.scaling_factor, self.off_set)
+            else:
+                self.off_set, self.scaling_factor = bird.render(self.display, self.scaling_factor, self.off_set)
+                # taking care of x offset
+                self.off_set[0] = max(
+                    min(
+                        self.off_set[0],
+                        0
+                    ),
+                    self.window.get_width() - 2 * self.window.get_width() / self.scaling_factor
+                )
+                # taking care of y offset
+                self.off_set[1] = max(
+                    min(
+                        self.off_set[1],
+                        0
+                    ),
+                    self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
+                )
+                # taking care of scale value
+                self.scaling_factor = min(2, self.scaling_factor)
 
+
+            # blits arm 2 of slingshot 1
             self.display.blit(
                 self.assets['launcher'][1],
                 (
@@ -152,6 +182,7 @@ class game():
                 ),
                 (0, 0)
             )
+
 
             self.window.blit(
                 pygame.transform.scale(
