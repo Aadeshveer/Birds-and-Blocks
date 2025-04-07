@@ -2,7 +2,6 @@ import pygame as pygame
 from scripts.blockmap import BlockMap
 from scripts.player import Player
 from scripts.utils import load_image, load_images
-from scripts.birds import Bird
 
 class game():
     def __init__(self):
@@ -33,12 +32,13 @@ class game():
 
         self.scrolling = True
 
-        self.player1 = Player((self.display.get_width() // 32,630))
-        self.player2 = Player((self.display.get_width() - 3 * 64 - self.display.get_width() // 32,630))
-    
+        self.player1 = Player(self,(self.display.get_width() // 32,630))
+        self.player2 = Player(self,(self.display.get_width() - 3 * 64 - self.display.get_width() // 32,630))
+        # maintain a single mpos variable that will be passed to other functions
+        self.mpos = (0, 0)
+
     def run(self):
 
-        bird = Bird((self.display.get_width(), self.display.get_height()),(290,560), 'idle')
 
         while True:
             self.display.fill('#87CEEB')
@@ -55,19 +55,21 @@ class game():
                         if pygame.mouse.get_pressed()[2]:
                             self.scaling_factor = 2 if self.scaling_factor==1 else 1
 
-            if pygame.mouse.get_pressed()[1]:
-                bird.mode = 'ready'
-
-            mpos = pygame.mouse.get_pos()
+            self.mpos = pygame.mouse.get_pos()
+            self.scaled_mpos = (
+                (self.mpos[0] - self.off_set[0]) * self.scaling_factor / 2,
+                (self.mpos[1] - self.off_set[1]) *self.scaling_factor/2
+            )
             
+            # scrolls the screen
             if self.scrolling:
                 # value by which offset will move
                 delta = 0
 
-                if mpos[0] < self.window.get_width()/4:
-                    delta = - (mpos[0] - self.window.get_width() / 4)/30
-                if mpos[0] > 3*self.window.get_width()/4:
-                    delta = - (mpos[0] - 3 * self.window.get_width() / 4)/30
+                if self.mpos[0] < self.window.get_width()/4:
+                    delta = - (self.mpos[0] - self.window.get_width() / 4)/30
+                if self.mpos[0] > 3*self.window.get_width()/4:
+                    delta = - (self.mpos[0] - 3 * self.window.get_width() / 4)/30
                 self.off_set[0] = max(
                     min(
                         self.off_set[0] + delta,
@@ -78,10 +80,10 @@ class game():
 
                 delta = 0
                 
-                if mpos[1] < self.window.get_height()/4:
-                    delta = - (mpos[1] - self.window.get_height() / 4)/30
-                if mpos[1] > 3*self.window.get_height()/4:
-                    delta = - (mpos[1] - 3 * self.window.get_height() / 4)/30
+                if self.mpos[1] < self.window.get_height()/4:
+                    delta = - (self.mpos[1] - self.window.get_height() / 4)/30
+                if self.mpos[1] > 3*self.window.get_height()/4:
+                    delta = - (self.mpos[1] - 3 * self.window.get_height() / 4)/30
                 self.off_set[1] = max(
                     min(
                         self.off_set[1] + delta,
@@ -90,14 +92,9 @@ class game():
                     self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
                 )
 
-            print(self.scaling_factor)
 # [Updating the screen] -------------------------------------------------------------------------- #
-            mpos = pygame.mouse.get_pos()
 
-            self.scrolling = bird.update([
-                (mpos[0] - self.off_set[0]) * self.scaling_factor / 2,
-                (mpos[1] - self.off_set[1]) *self.scaling_factor/2
-            ])
+
 
             # blits the background mountains/scene
             self.display.blit(
@@ -119,28 +116,26 @@ class game():
                 )
             )
 
-            if self.scrolling:
-                _ = bird.render(self.display, self.scaling_factor, self.off_set)
-            else:
-                self.off_set, self.scaling_factor = bird.render(self.display, self.scaling_factor, self.off_set)
-                # taking care of x offset
-                self.off_set[0] = max(
-                    min(
-                        self.off_set[0],
-                        0
-                    ),
-                    self.window.get_width() - 2 * self.window.get_width() / self.scaling_factor
-                )
-                # taking care of y offset
-                self.off_set[1] = max(
-                    min(
-                        self.off_set[1],
-                        0
-                    ),
-                    self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
-                )
-                # taking care of scale value
-                self.scaling_factor = min(2, self.scaling_factor)
+            self.player1.render()
+            
+            # taking care of x offset
+            self.off_set[0] = max(
+                min(
+                    self.off_set[0],
+                    0
+                ),
+                self.window.get_width() - 2 * self.window.get_width() / self.scaling_factor
+            )
+            # taking care of y offset
+            self.off_set[1] = max(
+                min(
+                    self.off_set[1],
+                    0
+                ),
+                self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
+            )
+            # taking care of scale value
+            self.scaling_factor = min(2, self.scaling_factor)
 
 
             # blits arm 2 of slingshot 1
@@ -151,6 +146,8 @@ class game():
                     648 - self.assets['launcher'][1].get_height()
                 )
             )
+
+
 
             # blits the slingshot 2
             self.display.blit(
@@ -168,9 +165,8 @@ class game():
                 )
             )
 
-            # blits the blocks, birds etc.
-            self.player1.render(self.display)
-            self.player2.render(self.display)
+
+            # self.player2.render()
 
             # blits the foreground grass and foundations
             self.display.blit(
