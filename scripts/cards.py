@@ -2,65 +2,69 @@ import pygame
 import math
 import random
 from .birds import Bird
-from .utils import load_image,load_images
 
 class Deck:
-    def __init__(self, map_size, origin = (0, 0), cards = None, player='left'):
+    '''
+    Stores the cards and renders them
+    '''
+    def __init__(self, game, map_size, origin = (0, 0), cards = None, player='left'):
         self.cards = []
+        self.game = game
         self.rect_list = []
-        self.ctr = 0
         self.active = None
         self.origin = origin
         self.map_size = map_size
         if cards is not None:
             for card_type in cards:
-                self.cards.append(Card(card_type, map_size, origin, player))
+                self.cards.append(Card(self.game, card_type, map_size, origin, player))
         for i,card in enumerate(self.cards):
             x = map_size[0] // len(self.cards) * i + (map_size[1] // len(self.cards) - card.img.get_width())
             y = 80
             self.rect_list.append(card.rect((x,y)))
 
-    def play_deck(self, surf, mpos, offset, scaling_factor):
-        self.ctr+=1
+    def play_deck(self):
+        '''
+        Displays the deck and manages the operations of cards
+        '''
         if self.active == None:
             for i,rect in enumerate(self.rect_list):
                 random.seed(i)
-                surf.blit(self.cards[i].img, (rect.left, rect.top + + 9*math.sin(self.ctr/10 + random.random())))
-                if rect.collidepoint(mpos):
+                self.game.display.blit(self.cards[i].img, (rect.left, rect.top + + (6+3*random.random())*math.sin(pygame.time.get_ticks()/200 + random.random())))
+                if rect.collidepoint(self.game.scaled_mpos):
                     if pygame.mouse.get_pressed()[0]:
                         self.active = i
 
         else:
-            try:
-                return self.cards[self.active].bird(surf, mpos, offset, scaling_factor)
-            except Exception as e:
-                if str(e) == 'Bird out of bounds':
-                    self.cards.pop(self.active)
-                    self.rect_list = []
-                    self.active = None
-                    for i,card in enumerate(self.cards):
-                        x = self.map_size[0] // len(self.cards) * i + (self.map_size[1] // len(self.cards) - card.img.get_width())
-                        y = 80
-                        self.rect_list.append(card.rect((x,y)))
-                    return  (offset, scaling_factor)
-                else:
-                    raise e
+            if not self.cards[self.active].bird():
+                self.cards.pop(self.active)
+                self.rect_list = []
+                self.active = None
+                for i,card in enumerate(self.cards):
+                    x = self.map_size[0] // len(self.cards) * i + (self.map_size[1] // len(self.cards) - card.img.get_width())
+                    y = 80
+                    self.rect_list.append(card.rect((x,y)))
             
 
 class Card:
-    def __init__(self, card_type, map_size, origin, player):
+    def __init__(self, game, card_type, map_size, origin, player):
         self.type = card_type
         self.player = player
         self.map_size = map_size
         self.origin = origin
-        self.img = load_image('cards/' + self.type + '/' + self.type + '.png')
-        self.projectile = Bird(self.map_size, self.origin, mode='ready', flip=True if self.player == 'right' else False)
+        self.game = game
+        self.img = self.game.assets['cards'][self.type]
+        self.projectile = Bird(self.game, self.map_size, self.origin, mode='ready', flip=True if self.player == 'right' else False)
 
-    def bird(self, surf, mpos, offset, scaling_factor):
+    def bird(self):
+        '''
+        Returns if bird is alive
+        '''
         if pygame.mouse.get_pressed()[1]:
             self.projectile.mode = 'ready'
-        self.projectile.update(mpos)
-        return self.projectile.render(surf, scaling_factor, offset)
+        if not self.projectile.update():
+            return False
+        self.projectile.render()
+        return True
 
     def rect(self, pos):
         return pygame.rect.Rect(pos[0], pos[1], self.img.get_width(), self.img.get_height())
