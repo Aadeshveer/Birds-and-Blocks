@@ -228,6 +228,9 @@ class game():
     def change_scaling(self, expected_scaling, ratio):
         self.scaling_factor = (ratio * self.scaling_factor + expected_scaling) / (ratio + 1)
 
+    def get_player_by_id(self, id):
+        return self.player1 if id == 0 else self.player2
+
 while True:            
     try:
         game().run()

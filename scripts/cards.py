@@ -3,6 +3,13 @@ import math
 import random
 from .birds import Bird
 
+BIRDS = (
+    'red',
+    'blue',
+    'chuck',
+    'bomb',
+)
+
 class Deck:
     '''
     Stores the cards and renders them
@@ -55,7 +62,8 @@ class Card:
         self.origin = origin
         self.game = game
         self.img = self.game.assets['cards'][self.type]
-        self.projectile = Bird(self.game, self.map_size, self.origin, mode='ready', flip = self.player == 'right')
+        if self.type in BIRDS:
+            self.projectile = Bird(self.game, self.map_size, self.type, self.origin, mode='ready', flip = self.player == 'right')
 
     def bird(self):
         '''
