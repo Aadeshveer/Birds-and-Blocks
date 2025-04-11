@@ -39,6 +39,8 @@ class Deck:
                 self.cards.pop(self.active)
                 self.rect_list = []
                 self.active = None
+                self.game.player_turn += 1
+                self.game.player_turn %= 2
                 for i,card in enumerate(self.cards):
                     x = self.map_size[0] // len(self.cards) * i + (self.map_size[1] // len(self.cards) - card.img.get_width())
                     y = 80
@@ -53,7 +55,7 @@ class Card:
         self.origin = origin
         self.game = game
         self.img = self.game.assets['cards'][self.type]
-        self.projectile = Bird(self.game, self.map_size, self.origin, mode='ready', flip=True if self.player == 'right' else False)
+        self.projectile = Bird(self.game, self.map_size, self.origin, mode='ready', flip = self.player == 'right')
 
     def bird(self):
         '''

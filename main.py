@@ -17,10 +17,17 @@ class game():
         self.assets = {
             'background' : load_images('background'),
             'launcher' : load_images('projectile_shooter'),
+            'launcher_flipped' : load_images('projectile_shooter', flip = True),
             'projectile' : {
                 'basic' : {
                     'idle' : Animation(load_images('projectiles/basic/idle')),
                     'in_air' : Animation(load_images('projectiles/basic/in_air')),
+                }
+            },
+            'projectile_flipped' : {
+                'basic' : {
+                    'idle' : Animation(load_images('projectiles/basic/idle', flip = True)),
+                    'in_air' : Animation(load_images('projectiles/basic/in_air', flip = True)),
                 }
             },
             'cards' : {
@@ -35,15 +42,16 @@ class game():
         self.scaling_factor = 2
 
         # moves the window for scroll effet
-        self.off_set = [-160, -90]
+        self.off_set = [0, 0]
 
         # initializing clock
         self.clock = pygame.time.Clock()
 
         self.scrolling = True
 
-        self.player1 = Player(self,(self.display.get_width() // 32,630))
-        self.player2 = Player(self,(self.display.get_width() - 3 * 64 - self.display.get_width() // 32,630))
+        self.player1 = Player(self, 0, (self.display.get_width() // 32,630))
+        self.player2 = Player(self, 1, (self.display.get_width() - 3 * 64 - self.display.get_width() // 32,630))
+        self.player_turn = 0
         # maintain a single mpos variable that will be passed to other functions
         self.mpos = (0, 0)
 
@@ -76,6 +84,8 @@ class game():
             
             # scrolls the screen
             if self.scrolling:
+
+                self.change_scaling(2, 14)
                 # value by which offset will move
                 delta = 0
 
@@ -131,6 +141,37 @@ class game():
 
             self.player1.render()
             
+
+            # blits arm 2 of slingshot 1
+            self.display.blit(
+                self.assets['launcher'][1],
+                (
+                    self.player1.block_map.tile_size[1] * 3 + self.display.get_width() // 16,
+                    648 - self.assets['launcher'][1].get_height()
+                )
+            )
+
+
+
+            # blits the slingshot 2
+            self.display.blit(
+                self.assets['launcher_flipped'][0],
+                (
+                    self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][0].get_width(),
+                    648 - self.assets['launcher_flipped'][0].get_height()
+                )
+            )
+
+            self.player2.render()
+            
+            self.display.blit(
+                self.assets['launcher_flipped'][1],
+                (
+                    self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][1].get_width(),
+                    648 - self.assets['launcher_flipped'][1].get_height()
+                )
+            )
+
             # taking care of x offset
             self.off_set[0] = max(
                 min(
@@ -149,37 +190,6 @@ class game():
             )
             # taking care of scale value
             self.scaling_factor = min(2, self.scaling_factor)
-
-
-            # blits arm 2 of slingshot 1
-            self.display.blit(
-                self.assets['launcher'][1],
-                (
-                    self.player1.block_map.tile_size[1] * 3 + self.display.get_width() // 16,
-                    648 - self.assets['launcher'][1].get_height()
-                )
-            )
-
-
-
-            # blits the slingshot 2
-            self.display.blit(
-                pygame.transform.flip(self.assets['launcher'][0], True, False),
-                (
-                    self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][0].get_width(),
-                    648 - self.assets['launcher'][0].get_height()
-                )
-            )
-            self.display.blit(
-                pygame.transform.flip(self.assets['launcher'][1], True, False),
-                (
-                    self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][1].get_width(),
-                    648 - self.assets['launcher'][1].get_height()
-                )
-            )
-
-
-            # self.player2.render()
 
             # blits the foreground grass and foundations
             self.display.blit(
@@ -208,6 +218,9 @@ class game():
             
             # set fps to 60
             self.clock.tick(60)
+
+    def change_scaling(self, expected_scaling, ratio):
+        self.scaling_factor = (ratio * self.scaling_factor + expected_scaling) / (ratio + 1)
 
 while True:            
     try:
