@@ -11,13 +11,14 @@ def load_image(path):
     img.set_colorkey((0, 0, 0))
     return img
 
-def load_images(path):
+def load_images(path, flip = False):
     '''
     Loads and returns an array of pygame images present in that dir
+    I flip is true mirrors the image
     '''
     images = []
     for img_name in sorted(os.listdir(BASE_IMG_PATH + '/' + path)):
-        images.append(load_image(path + '/' + img_name))
+        images.append(pygame.transform.flip(load_image(path + '/' + img_name), flip, False))
     return images
 
 class Animation:

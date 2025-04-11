@@ -9,13 +9,12 @@ class Bird:
         self.mode = mode
         self.game = game
         self.v = 0 + 0j
-        self.animation = self.game.assets['projectile']['basic']['idle'].copy()
+        self.anim_id = 'projectile_flipped' if flip else 'projectile'
+        self.animation = self.game.assets[self.anim_id]['basic']['idle'].copy()
         self.width = self.animation.img().get_width()
         self.height = self.animation.img().get_height()
         self.flip = flip
         self.map_size = map_size
-        if self.flip:
-            self.img = pygame.transform.flip(self.img, True, False)
 
     def calculate_next_pos(self):
         '''
@@ -44,8 +43,8 @@ class Bird:
         if self.mode == 'aiming':
             if not pygame.mouse.get_pressed()[0]:
                 self.mode = 'in_air'
-                self.animation = self.game.assets['projectile']['basic']['in_air'].copy()
-                self.v = (self.origin[0] - self.game.scaled_mpos[0])/5 * (-1 if self.flip else 1) + 1j * (self.origin[1] - self.game.scaled_mpos[1])/5
+                self.animation = self.game.assets[self.anim_id]['basic']['in_air'].copy()
+                self.v = (self.origin[0] - self.game.scaled_mpos[0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1])/5
                 modulus = abs(self.v)
                 self.v /= abs(self.v)
                 self.v *= 14 * (1-math.exp(-modulus))
@@ -66,15 +65,16 @@ class Bird:
         '''
         surf = self.game.display
         present_offset = self.game.off_set
-        present_scaling = self.game.scaling_factor
         surf.blit(self.animation.img(), self.pos)
         if self.mode == 'ready' or self.mode == 'aiming':
             expected_scaling = 2
         else:
-            expected_scaling = 1 + abs(self.pos[0]) / surf.get_width()
-        expected_scaling = (14 * present_scaling + expected_scaling) / 15
+            if self.flip:
+                expected_scaling = 1 + abs(surf.get_width() - self.pos[0]) / surf.get_width()
+            else:
+                expected_scaling = 1 + abs(self.pos[0]) / surf.get_width()
         expected_offset = [- self.pos[0] + surf.get_width() * expected_scaling / 4, - self.pos[1] - surf.get_height() * expected_scaling / 4]
         expected_offset[0] = (expected_offset[0] + 14 * present_offset[0]) / 15
         expected_offset[1] = (expected_offset[1] + 14 * present_offset[1]) / 15
         self.game.off_set = expected_offset
-        self.game.scaling_factor = expected_scaling
+        self.game.change_scaling(expected_scaling, 14)
