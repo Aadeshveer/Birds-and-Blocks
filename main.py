@@ -1,10 +1,11 @@
 import pygame as pygame
 from scripts.blockmap import BlockMap
 from scripts.player import Player
-from scripts.utils import load_image, load_images
+from scripts.utils import load_image, load_images, Animation
 
 class game():
     def __init__(self):
+
         pygame.init()
 
         pygame.display.set_caption('Birds and Blocks')
@@ -12,9 +13,19 @@ class game():
         # window will be the main window to be displayed on scree
         self.window = pygame.display.set_mode((1280,720))
 
+        # loading all the assets to prevent lag once game has started
         self.assets = {
             'background' : load_images('background'),
-            'launcher' : load_images('projectile_shooter')
+            'launcher' : load_images('projectile_shooter'),
+            'projectile' : {
+                'basic' : {
+                    'idle' : Animation(load_images('projectiles/basic/idle')),
+                    'in_air' : Animation(load_images('projectiles/basic/in_air')),
+                }
+            },
+            'cards' : {
+                'red' : load_image('cards/red/red.png'),
+            },
         }
         
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
@@ -50,7 +61,7 @@ class game():
                     exit(0)
 
                 if event.type == pygame.VIDEORESIZE:
-                    raise 'Window resize error'
+                    raise Exception('Window resize error')
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.scrolling:

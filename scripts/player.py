@@ -2,9 +2,12 @@ from .blockmap import BlockMap
 from .cards import Deck
 
 class Player:
+    '''
+    Player class manages the blockmap, cards, birds etc.
+    '''
     def __init__(self, game, origin, block_map = None):
-        self.origin = origin
         self.game = game
+        self.origin = origin
         if block_map is not None:
             self.block_map = BlockMap(origin,block_map)
         else:
@@ -24,6 +27,7 @@ class Player:
                 }
             )
         self.deck = Deck(
+            self.game,
             (
                 self.game.display.get_width(),
                 self.game.display.get_height()
@@ -38,10 +42,12 @@ class Player:
             
 
     def render(self):
+        '''
+        Renders all the blocks, projectiles, cards ... 
+        '''
         self.block_map.render(self.game.display)
         if self.deck.active == None:
             self.game.scrolling = True
-            self.deck.play_deck(self.game.display, self.game.scaled_mpos, self.game.off_set, self.game.scaling_factor)
         else:
             self.game.scrolling = False
-            self.game.off_set, self.game.scaling_factor = self.deck.play_deck(self.game.display, self.game.scaled_mpos, self.game.off_set, self.game.scaling_factor)
+        self.deck.play_deck()
