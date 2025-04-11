@@ -17,7 +17,7 @@ class Deck:
                 self.cards.append(Card(card_type, map_size, origin, player))
         for i,card in enumerate(self.cards):
             x = map_size[0] // len(self.cards) * i + (map_size[1] // len(self.cards) - card.img.get_width())
-            y = 40
+            y = 80
             self.rect_list.append(card.rect((x,y)))
 
     def play_deck(self, surf, mpos, offset, scaling_factor):
@@ -25,24 +25,26 @@ class Deck:
         if self.active == None:
             for i,rect in enumerate(self.rect_list):
                 random.seed(i)
-                surf.blit(self.cards[i].img, rect.topleft)
+                surf.blit(self.cards[i].img, (rect.left, rect.top + + 9*math.sin(self.ctr/10 + random.random())))
                 if rect.collidepoint(mpos):
                     if pygame.mouse.get_pressed()[0]:
                         self.active = i
-                else:
-                    rect.top += 2*math.sin(self.ctr/10 + random.random())
+
         else:
             try:
                 return self.cards[self.active].bird(surf, mpos, offset, scaling_factor)
             except Exception as e:
-                self.cards.pop(self.active)
-                self.rect_list = []
-                self.active = None
-                for i,card in enumerate(self.cards):
-                    x = self.map_size[0] // len(self.cards) * i + (self.map_size[1] // len(self.cards) - card.img.get_width())
-                    y = 40
-                    self.rect_list.append(card.rect((x,y)))
-                return  (offset, scaling_factor)
+                if str(e) == 'Bird out of bounds':
+                    self.cards.pop(self.active)
+                    self.rect_list = []
+                    self.active = None
+                    for i,card in enumerate(self.cards):
+                        x = self.map_size[0] // len(self.cards) * i + (self.map_size[1] // len(self.cards) - card.img.get_width())
+                        y = 80
+                        self.rect_list.append(card.rect((x,y)))
+                    return  (offset, scaling_factor)
+                else:
+                    raise e
             
 
 class Card:
@@ -55,7 +57,6 @@ class Card:
         self.projectile = Bird(self.map_size, self.origin, mode='ready', flip=True if self.player == 'right' else False)
 
     def bird(self, surf, mpos, offset, scaling_factor):
-        print(self.projectile.origin)
         if pygame.mouse.get_pressed()[1]:
             self.projectile.mode = 'ready'
         self.projectile.update(mpos)

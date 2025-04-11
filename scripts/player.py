@@ -32,7 +32,7 @@ class Player:
                 origin[0] + self.block_map.tile_size[0] * 3 + 60,
                 origin[1] - 60
             ),
-            ['red', 'red', 'red'],
+            ['red', 'red', 'red', 'red', 'red', 'red', 'red'],
             'left'
         )
             
