@@ -33,6 +33,12 @@ class game():
             'cards' : {
                 'red' : load_image('cards/red/red.png'),
             },
+            'blocks' : {
+                'glass' : Animation(load_images('blocks/glass'), img_dur = 1),
+                'wood' : Animation(load_images('blocks/wood'), img_dur = 1),
+                'stone' : Animation(load_images('blocks/stone'), img_dur = 1),
+                'royal' : Animation(load_images('blocks/royal'), img_dur = 1),
+            },
         }
         
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect

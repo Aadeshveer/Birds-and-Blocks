@@ -1,14 +1,21 @@
 import pygame
-from .utils import load_image
+
+HEALTH_MAP = {
+    'glass' : 100,
+    'wood' : 200,
+    'stone' : 300,
+    'royal' : 1000,
+}
 
 class BlockMap:
     
-    def __init__(self, origin, map = None):
+    def __init__(self, game, origin, map = None):
         '''
         Origin is a tuple of ints representing the origin of block printing
         Map is a dictionary of format { (int, int): type ... }
         '''
         self.origin = origin
+        self.game = game
         self.tile_size = (64, 64)
         self.block_map = {}
         if map is not None:
@@ -20,25 +27,20 @@ class BlockMap:
         Renders each block in block map
         '''
         for loc in self.block_map:
-            img = self.block_map[loc].img
+            img = self.block_map[loc].anim.img()
             surf.blit(img, (self.origin[0] + loc[0]*self.tile_size[0], self.origin[1] - loc[1]*self.tile_size[1] - img.get_height()))
         
     def add_block(self, loc, type):
         '''
         Adds a block at relative location loc
         '''
-        self.block_map[loc] = Block(type, self.tile_size)
+        self.block_map[loc] = Block(self.game, type)
 
 class Block:
     
-    def __init__(self, type = None, tile_size = None):
-        if type is None:
-            self.type = 'test'
+    def __init__(self, game, type):
         self.type = type
-        self.img = load_image('blocks/' + self.type + '.png')
-        if tile_size == None:
-            self.tile_size = self.img.get_size()
-        else:
-            self.tile_size = tile_size
-            self.img = pygame.transform.scale(self.img, (tile_size))
-            
+        self.game = game
+        self.anim = self.game.assets['blocks'][type].copy()
+        self.HP = HEALTH_MAP[type]
+        self.tile_size = self.anim.img().get_size()
