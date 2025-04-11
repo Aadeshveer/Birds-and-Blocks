@@ -11,9 +11,10 @@ class Player:
         self.origin = origin
         # initializing tower
         if block_map is not None:
-            self.block_map = BlockMap(origin, block_map)
+            self.block_map = BlockMap(self.game, origin, block_map)
         else:
             self.block_map = BlockMap(
+                self.game,
                 origin,
                 {
                     (0,0) : 'stone',
