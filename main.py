@@ -13,7 +13,6 @@ class game():
         self.window = pygame.display.set_mode((1280,720))
 
         self.assets = {
-            'projectile/basic' : load_image('projectiles/basic/0.png'),
             'background' : load_images('background'),
             'launcher' : load_images('projectile_shooter')
         }
@@ -22,7 +21,7 @@ class game():
         self.display = pygame.Surface((1280,720))
 
         # scales the display to window for zoom effect
-        self.scaling_factor = 1
+        self.scaling_factor = 2
 
         # moves the window for scroll effet
         self.off_set = [-160, -90]
@@ -49,6 +48,9 @@ class game():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit(0)
+
+                if event.type == pygame.VIDEORESIZE:
+                    raise 'Window resize error'
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.scrolling:
@@ -195,6 +197,12 @@ class game():
             
             # set fps to 60
             self.clock.tick(60)
-            
 
-game().run()
+while True:            
+    try:
+        game().run()
+    except Exception as e:
+        if str(e) == 'Window resize error':
+            print("Window was resized! Resetting")
+        else:
+            raise e

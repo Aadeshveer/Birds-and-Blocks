@@ -1,5 +1,5 @@
 import pygame
-from .utils import load_image
+from .utils import load_images,Animation
 import math
 
 class Bird:
@@ -9,9 +9,13 @@ class Bird:
         self.pos = origin
         self.mode = mode
         self.v = 0 + 0j
-        self.img = load_image('projectiles/basic/0.png')
-        self.width = self.img.get_width()
-        self.height = self.img.get_height()
+        self.animations ={
+            'idle' : Animation(load_images('projectiles/basic/idle')),
+            'in_air' : Animation(load_images('projectiles/basic/in_air'))
+        }
+        self.animation = self.animations['idle'].copy()
+        self.width = self.animation.img().get_width()
+        self.height = self.animation.img().get_height()
         self.flip = flip
         self.map_size = map_size
         if self.flip:
@@ -34,38 +38,42 @@ class Bird:
         Manges the bird movement
         Returns True if scrolling is allowed else False
         '''
+        self.animation.update()
         if self.mode == 'in_air':
             self.calculate_next_pos()
+            self.animation = self.animations['in_air'].copy()
 
         if self.mode == 'ready':
-            if pygame.mouse.get_pressed()[0] and math.dist(self.origin, mpos) < 20:
+            if pygame.mouse.get_pressed()[0] and math.dist((self.origin[0] + 16, self.origin[1] + 16), mpos) < 20:
                 self.mode = 'aiming'
-            return False
 
         if self.mode == 'aiming':
             if not pygame.mouse.get_pressed()[0]:
                 self.mode = 'in_air'
-                self.v = abs(self.origin[0] - mpos[0])/5 * (-1 if self.flip else 1) - 1j * abs(self.origin[1] - mpos[1])/5
-                self.v *= 1.2
-                if abs(self.v) >= 16:
-                    self.v /= abs(self.v)
-                    self.v *= 16
-            if math.dist(mpos, self.pos) < 50:
+                self.v = (self.origin[0] - mpos[0])/5 * (-1 if self.flip else 1) + 1j * (self.origin[1] - mpos[1])/5
+                modulus = abs(self.v)
+                self.v /= abs(self.v)
+                self.v *= 14 * (1-math.exp(-modulus))
+            dist = math.dist(mpos, self.origin)
+            if dist < 50:
                 self.pos = mpos
-            return False
-        return True
+            else:
+                self.pos = (
+                    self.origin[0] + (mpos[0]-self.origin[0])/dist*50,
+                    self.origin[1] + (mpos[1]-self.origin[1])/dist*50
+                )
+
 
     def render(self, surf, present_scaling, present_offset):
         '''
         Renders bird on surf and returns a scaling factor for better effect
         '''
-        surf.blit(self.img, self.pos)
-        if self.mode == 'aiming':
+        surf.blit(self.animation.img(), self.pos)
+        if self.mode == 'ready' or self.mode == 'aiming':
             expected_scaling = 2
-            expected_scaling = (present_scaling + expected_scaling) / 2
         else:
             expected_scaling = 1 + abs(self.pos[0]) / surf.get_width()
-            expected_scaling = (9 * present_scaling + expected_scaling) / 10
+        expected_scaling = (14 * present_scaling + expected_scaling) / 15
         expected_offset = [- self.pos[0] + surf.get_width() * expected_scaling / 4, - self.pos[1] - surf.get_height() * expected_scaling / 4]
         expected_offset[0] = (expected_offset[0] + 14 * present_offset[0]) / 15
         expected_offset[1] = (expected_offset[1] + 14 * present_offset[1]) / 15
