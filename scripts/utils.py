@@ -40,5 +40,10 @@ class Animation:
             if self.frame >= len(self.images) * self.img_dur:
                 self.done = True
 
+    def set_frame(self, frame):
+        if self.frame >= len(self.images) * self.img_dur:
+            raise Exception('Entered frame is out of range')
+        self.frame = frame
+
     def img(self):
         return self.images[int(self.frame / self.img_dur)]

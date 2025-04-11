@@ -39,7 +39,7 @@ class Player:
                 origin[0] + ((self.block_map.tile_size[0] * 3 + 60) if self.identity == 0 else -92),
                 origin[1] - 60
             ),
-            ['red', 'red', 'red', 'red', 'red', 'red', 'red'],
+            ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red'],
             'left' if self.identity==0 else 'right'
         )
             

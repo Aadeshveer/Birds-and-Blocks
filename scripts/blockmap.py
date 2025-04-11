@@ -1,9 +1,9 @@
 import pygame
 
 HEALTH_MAP = {
-    'glass' : 100,
-    'wood' : 200,
-    'stone' : 300,
+    'glass' : 55,
+    'wood' : 75,
+    'stone' : 95,
     'royal' : 1000,
 }
 
@@ -44,3 +44,9 @@ class Block:
         self.anim = self.game.assets['blocks'][type].copy()
         self.HP = HEALTH_MAP[type]
         self.tile_size = self.anim.img().get_size()
+
+    def damage(self, n):
+        self.HP -= n
+        if self.HP <= 0:
+            return True
+        self.anim.set_frame(5 * (HEALTH_MAP[self.type] - self.HP)//HEALTH_MAP[self.type])

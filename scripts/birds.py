@@ -1,13 +1,23 @@
 import pygame
 import math
 
+HIT_SHAPE_MAP = {
+    'red' : (22,23,18),
+}
+
+DAMAGE_MAP = {
+    'red' : (20,0)
+}
+
 class Bird:
 
-    def __init__(self, game, map_size, origin = (0, 0), mode = 'idle', flip = False):
+    def __init__(self, game, map_size, type, origin = (0, 0), mode = 'idle', flip = False):
         self.origin = origin
         self.pos = origin
         self.mode = mode
         self.game = game
+        self.type = type
+        self.hit_shape = HIT_SHAPE_MAP[type]
         self.v = 0 + 0j
         self.anim_id = 'projectile_flipped' if flip else 'projectile'
         self.animation = self.game.assets[self.anim_id]['basic']['idle'].copy()
@@ -23,15 +33,16 @@ class Bird:
         pos = list(self.pos)
         pos[0] += self.v.real
         pos[1] += self.v.imag
-        self.v = self.v.real + 1j * min(self.v.imag + 1/6, 5)
+        self.v = self.v.real + 1j * min(self.v.imag + 1/6, 10)
         self.pos = tuple(pos)
-        return (0 < self.pos[0] < self.map_size[0] - self.width and 0 < self.pos[1] < self.map_size[1])
+        return (0 < self.pos[0] < self.map_size[0] - self.width and 0 < self.pos[1] < self.map_size[1]) and not self.collision_check()
 
     def update(self):
         '''
         Manges the bird movement
         Return True if bird operates
         '''
+
         self.animation.update()
         if self.mode == 'in_air':
             return self.calculate_next_pos()
@@ -78,3 +89,26 @@ class Bird:
         expected_offset[1] = (expected_offset[1] + 14 * present_offset[1]) / 15
         self.game.off_set = expected_offset
         self.game.change_scaling(expected_scaling, 14)
+
+    def collision_check(self):
+        playing = self.game.player_turn
+        to_hit = (playing + 1) % 2
+        rel_loc = []
+        for i in range(2):
+            for j in range(2):
+                rel_loc.append(
+                    (
+                        (self.pos[0] - self.game.get_player_by_id(to_hit).origin[0] - self.hit_shape[0] + i * self.hit_shape[2]) // self.game.get_player_by_id(to_hit).block_map.tile_size[0],
+                        (- self.pos[1] + self.game.get_player_by_id(to_hit).origin[1] - self.hit_shape[1] + j * self.hit_shape[2]) // self.game.get_player_by_id(to_hit).block_map.tile_size[1],
+                    )
+                )
+        for loc in rel_loc:
+            if loc in self.game.get_player_by_id(to_hit).block_map.block_map:
+                if self.game.get_player_by_id(to_hit).block_map.block_map[loc].damage(self.damage()):
+                    self.game.get_player_by_id(to_hit).block_map.block_map.pop(loc)
+                return True
+        return False
+    
+    def damage(self):
+        return DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)
+        
