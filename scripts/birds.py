@@ -2,11 +2,17 @@ import pygame
 import math
 
 HIT_SHAPE_MAP = {
-    'red' : (22,23,18),
+    'basic' : (22,23,18),
+    'wood' : (22,22,21),
+    'stone' : (25,30,24),
+    'glass' : (16,14,13),
 }
 
 DAMAGE_MAP = {
-    'red' : (20,0)
+    'basic' : (20,0),
+    'wood' : (20,0),
+    'stone' : (20,0),
+    'glass' : (20,0),
 }
 
 class Bird:
@@ -20,7 +26,7 @@ class Bird:
         self.hit_shape = HIT_SHAPE_MAP[type]
         self.v = 0 + 0j
         self.anim_id = 'projectile_flipped' if flip else 'projectile'
-        self.animation = self.game.assets[self.anim_id]['basic']['idle'].copy()
+        self.animation = self.game.assets[self.anim_id][self.type]['idle'].copy()
         self.width = self.animation.img().get_width()
         self.height = self.animation.img().get_height()
         self.flip = flip
@@ -54,7 +60,7 @@ class Bird:
         if self.mode == 'aiming':
             if not pygame.mouse.get_pressed()[0]:
                 self.mode = 'in_air'
-                self.animation = self.game.assets[self.anim_id]['basic']['in_air'].copy()
+                self.animation = self.game.assets[self.anim_id][self.type]['in_air'].copy()
                 self.v = (self.origin[0] - self.game.scaled_mpos[0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1])/5
                 modulus = abs(self.v)
                 self.v /= abs(self.v)
