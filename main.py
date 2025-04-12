@@ -22,16 +22,43 @@ class game():
                 'basic' : {
                     'idle' : Animation(load_images('projectiles/basic/idle')),
                     'in_air' : Animation(load_images('projectiles/basic/in_air')),
-                }
+                },
+                'wood' : {
+                    'idle' : Animation(load_images('projectiles/wood/idle')),
+                    'in_air' : Animation(load_images('projectiles/wood/in_air')),
+                },
+                'stone' : {
+                    'idle' : Animation(load_images('projectiles/stone/idle')),
+                    'in_air' : Animation(load_images('projectiles/stone/in_air')),
+                },
+                'glass' : {
+                    'idle' : Animation(load_images('projectiles/glass/idle')),
+                    'in_air' : Animation(load_images('projectiles/glass/in_air')),
+                },
             },
             'projectile_flipped' : {
                 'basic' : {
                     'idle' : Animation(load_images('projectiles/basic/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/basic/in_air', flip = True)),
-                }
+                },
+                'wood' : {
+                    'idle' : Animation(load_images('projectiles/wood/idle', flip = True)),
+                    'in_air' : Animation(load_images('projectiles/wood/in_air', flip = True)),
+                },
+                'stone' : {
+                    'idle' : Animation(load_images('projectiles/stone/idle', flip = True)),
+                    'in_air' : Animation(load_images('projectiles/stone/in_air', flip = True)),
+                },
+                'glass' : {
+                    'idle' : Animation(load_images('projectiles/glass/idle', flip = True)),
+                    'in_air' : Animation(load_images('projectiles/glass/in_air', flip = True)),
+                },
             },
             'cards' : {
-                'red' : load_image('cards/red/red.png'),
+                'basic' : load_image('cards/red/red.png'),
+                'wood' : load_image('cards/wood/wood.png'),
+                'stone' : load_image('cards/stone/stone.png'),
+                'glass' : load_image('cards/glass/glass.png'),
             },
             'blocks' : {
                 'glass' : Animation(load_images('blocks/glass'), img_dur = 1),
@@ -50,6 +77,9 @@ class game():
         # moves the window for scroll effet
         self.off_set = [0, 0]
 
+        # mode dictates what is happening in game
+        self.mode = 'card_unpack'
+
         # initializing clock
         self.clock = pygame.time.Clock()
 
@@ -65,6 +95,7 @@ class game():
 
 
         while True:
+            # filling skyblue in background
             self.display.fill('#87CEEB')
 
 # [Taking input] --------------------------------------------------------------------------------- #
@@ -77,19 +108,15 @@ class game():
                 if event.type == pygame.VIDEORESIZE:
                     raise Exception('Window resize error')
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.scrolling:
-                        if pygame.mouse.get_pressed()[2]:
-                            self.scaling_factor = 2 if self.scaling_factor==1 else 1
 
             self.mpos = pygame.mouse.get_pos()
             self.scaled_mpos = (
                 (self.mpos[0] - self.off_set[0]) * self.scaling_factor / 2,
-                (self.mpos[1] - self.off_set[1]) *self.scaling_factor/2
+                (self.mpos[1] - self.off_set[1]) * self.scaling_factor / 2
             )
             
             # scrolls the screen
-            if self.scrolling:
+            if self.mode in ['card_unpack']:
 
                 self.change_scaling(2, 14)
                 # value by which offset will move
@@ -147,7 +174,6 @@ class game():
 
             self.player1.render()
             
-
             # blits arm 2 of slingshot 1
             self.display.blit(
                 self.assets['launcher'][1],
@@ -159,7 +185,7 @@ class game():
 
 
 
-            # blits the slingshot 2
+            # blits arm 1 of slingshot 2
             self.display.blit(
                 self.assets['launcher_flipped'][0],
                 (
@@ -170,6 +196,7 @@ class game():
 
             self.player2.render()
             
+            # blits arm 2 of slingshot 2
             self.display.blit(
                 self.assets['launcher_flipped'][1],
                 (
@@ -208,7 +235,7 @@ class game():
                 (0, 0)
             )
 
-
+            # blits the scrolled and scaled display on window
             self.window.blit(
                 pygame.transform.scale(
                     self.display,
@@ -220,6 +247,7 @@ class game():
                 self.off_set
             )
 
+            # updates window
             pygame.display.update()
             
             # set fps to 60
