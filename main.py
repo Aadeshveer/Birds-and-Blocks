@@ -2,6 +2,7 @@ import pygame as pygame
 from scripts.blockmap import BlockMap
 from scripts.player import Player
 from scripts.utils import load_image, load_images, Animation
+from scripts.particles import Particles
 
 class game():
     def __init__(self):
@@ -22,36 +23,44 @@ class game():
                 'basic' : {
                     'idle' : Animation(load_images('projectiles/basic/idle')),
                     'in_air' : Animation(load_images('projectiles/basic/in_air')),
+                    'feather' : Animation(load_images('projectiles/basic/feather'), img_dur=10, loop=False),
                 },
                 'wood' : {
                     'idle' : Animation(load_images('projectiles/wood/idle')),
                     'in_air' : Animation(load_images('projectiles/wood/in_air')),
+                    'feather' : Animation(load_images('projectiles/wood/feather'), img_dur=10, loop=False),
                 },
                 'stone' : {
                     'idle' : Animation(load_images('projectiles/stone/idle')),
                     'in_air' : Animation(load_images('projectiles/stone/in_air')),
+                    'feather' : Animation(load_images('projectiles/stone/feather'), img_dur=10, loop=False),
                 },
                 'glass' : {
                     'idle' : Animation(load_images('projectiles/glass/idle')),
                     'in_air' : Animation(load_images('projectiles/glass/in_air')),
+                    'feather' : Animation(load_images('projectiles/glass/feather'), img_dur=10, loop=False),
                 },
             },
             'projectile_flipped' : {
                 'basic' : {
                     'idle' : Animation(load_images('projectiles/basic/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/basic/in_air', flip = True)),
+                    'feather' : Animation(load_images('projectiles/basic/feather', flip = True), img_dur=10, loop=False),
                 },
                 'wood' : {
                     'idle' : Animation(load_images('projectiles/wood/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/wood/in_air', flip = True)),
+                    'feather' : Animation(load_images('projectiles/wood/feather', flip = True), img_dur=10, loop=False),
                 },
                 'stone' : {
                     'idle' : Animation(load_images('projectiles/stone/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/stone/in_air', flip = True)),
+                    'feather' : Animation(load_images('projectiles/stone/feather', flip = True), img_dur=10, loop=False),
                 },
                 'glass' : {
                     'idle' : Animation(load_images('projectiles/glass/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/glass/in_air', flip = True)),
+                    'feather' : Animation(load_images('projectiles/glass/feather', flip = True), img_dur=10, loop=False),
                 },
             },
             'cards' : {
@@ -67,7 +76,7 @@ class game():
                 'royal' : Animation(load_images('blocks/royal'), img_dur = 1),
             },
         }
-        
+
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
         self.display = pygame.Surface((1280,720))
 
@@ -84,6 +93,17 @@ class game():
         self.clock = pygame.time.Clock()
 
         self.scrolling = True
+
+        self.particles = Particles({
+            'basic_feather' : self.assets['projectile']['basic']['feather'],
+            'wood_feather' : self.assets['projectile']['wood']['feather'],
+            'stone_feather' : self.assets['projectile']['stone']['feather'],
+            'glass_feather' : self.assets['projectile']['glass']['feather'],
+            'basic_feather_flipped' : self.assets['projectile_flipped']['basic']['feather'],
+            'wood_feather_flipped' : self.assets['projectile_flipped']['wood']['feather'],
+            'stone_feather_flipped' : self.assets['projectile_flipped']['stone']['feather'],
+            'glass_feather_flipped' : self.assets['projectile_flipped']['glass']['feather'],
+        })
 
         self.player1 = Player(self, 0, (self.display.get_width() // 32,630))
         self.player2 = Player(self, 1, (self.display.get_width() - 3 * 64 - self.display.get_width() // 32,630))
@@ -223,6 +243,10 @@ class game():
             )
             # taking care of scale value
             self.scaling_factor = min(2, self.scaling_factor)
+
+            # display particles
+            self.particles.render(self.display)
+            self.particles.update()
 
             # blits the foreground grass and foundations
             self.display.blit(

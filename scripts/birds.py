@@ -110,6 +110,7 @@ class Bird:
                 )
         for loc in rel_loc:
             if loc in self.game.get_player_by_id(to_hit).block_map.block_map:
+                self.game.particles.add_particles(self.type + '_feather', self.pos, 5)
                 if self.game.get_player_by_id(to_hit).block_map.block_map[loc].damage(self.damage()):
                     self.game.get_player_by_id(to_hit).block_map.block_map.pop(loc)
                 return True
