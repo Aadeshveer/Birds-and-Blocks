@@ -39,6 +39,7 @@ class Animation:
             self.frame += 1
             if self.frame >= len(self.images) * self.img_dur:
                 self.done = True
+        return self.done
 
     def set_frame(self, frame):
         if self.frame >= len(self.images) * self.img_dur:

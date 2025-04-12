@@ -39,7 +39,7 @@ class Deck:
     def render(self, sway = True):
         for i,rect in enumerate(self.rect_list):
             random.seed(i)
-            self.game.display.blit(self.cards[i].img, (rect.left, rect.top +((6+3*random.random())*math.sin(pygame.time.get_ticks()/200 + random.random()) if sway else 0)))
+            self.game.display.blit(self.cards[i].img, (rect.left, rect.top +((3+6*random.random())*math.sin(pygame.time.get_ticks()/200 + random.random()) if sway else 0)))
             if rect.collidepoint(self.game.scaled_mpos):
                 if pygame.mouse.get_pressed()[0]:
                     self.active = i
@@ -50,7 +50,6 @@ class Deck:
             x = self.map_size[0] / (2 * len(self.cards))* i + (self.map_size[0] / (2 * len(self.cards)) - card.img.get_width())
             x = (self.map_size[0]-x if self.player == 'right' else x)
             y = 80
-            print((x,y))
             self.pos_list.append((x,y))
 
     def play_deck(self):
