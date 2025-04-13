@@ -22,31 +22,50 @@ def load_images(path, flip = False):
     return images
 
 class Animation:
+    '''
+    Helps in managin multi image animations
+    '''
     def __init__(self, images, img_dur = 5, loop = True):
         self.images = images
-        self.length = len(self.images)
         self.img_dur = img_dur
         self.loop = loop
         self.frame = 0
         self.done = False
+        self.length = len(self.images)
 
     def copy(self):
+        '''
+        Returns a deepcopy of animation
+        '''
         return Animation(self.images, self.img_dur, self.loop)
 
     def update(self):
+        '''
+        Updates the frame and image of sprite
+        Returns if the animation is complete
+        '''
+
         if self.loop:
             self.frame = (self.frame + 1) % (len(self.images) * self.img_dur)
+        
         else:
             self.frame += 1
             if self.frame >= len(self.images) * self.img_dur:
                 self.done = True
+        
         return self.done
 
     def set_frame(self, frame):
+        '''
+        Allows manual setting of frame
+        '''
         if self.frame >= len(self.images) * self.img_dur:
             raise Exception('Entered frame is out of range')
         self.frame = frame
 
     def img(self):
+        '''
+        Returns the present frame image for rendering
+        '''
         return self.images[int(self.frame / self.img_dur)]
     
