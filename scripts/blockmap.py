@@ -36,7 +36,7 @@ class BlockMap:
         '''
         return (
             self.origin[0] + loc[0] * self.tile_size[0],
-            self.origin[1] - loc[1] * self.tile_size[1],
+            self.origin[1] - (loc[1] + 1) * self.tile_size[1],
         )
 
     def add_block(self, loc, type):
