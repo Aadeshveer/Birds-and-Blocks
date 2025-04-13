@@ -3,15 +3,32 @@ import random
 import math
 
 class Particles:
+    '''
+    Allows us to mange bunch of non interactive particles for special effects
+    '''
     def __init__(self, window_size, assets):
+        
         self.assets = assets
         self.window_size = window_size
         self.particles = []
 
     def add_particles(self, type, pos, effects, num = None):
+        '''
+        Adds a particle to particle manager
+        Possible effects:
+            random: spawns particles at random positions close to given
+            sequence: if animation has a specific sequence of unique particles and none is to be updated
+            radial: gives a random initial radial velocity
+            float: gives the particle random up push to cause variable velocity along y axis
+            gravity: adds gravity to motion of particle
+        '''
+        
         if num == None:
+        
             num = self.assets[type].length
+        
         for i in range(num):
+        
             self.particles.append(
                 Particle(
                     self.assets[type + ('_flipped' if (random.random() > 0.5 and type+'_flipped' in self.assets) else '')].copy(),
@@ -29,48 +46,82 @@ class Particles:
             )
 
     def update(self):
+        '''
+        Updates all particles and removes some if their animation is finished
+        '''
         for particle in self.particles:
             if particle.update():
                 self.particles.remove(particle)
 
     def render(self, surf):
+        '''
+        Renders all the particles on given surface
+        '''
         for particle in self.particles:
             particle.render(surf)
 
 class Particle:
+    '''
+    Handles non interactve special effects
+    '''
     def __init__(self, animation, window_size, type, pos, vx, vy = 1, effects = None, idx = None):
+
         if effects == None:
             self.effects = []
+        
         else:
             self.effects = effects
+        
         self.window_size = window_size
+        
+        # animation setting
         self.anim = animation
+        
         if idx != None:
             self.anim.set_frame(10*idx)
+        
         else:
             self.anim.set_frame(30*int(random.random()))
+        
         self.type = type
+
+        self.pos = list(pos)
+        
         self.vx = vx
         self.vy = vy
-        self.pos = list(pos)
+        
         if 'radial' in self.effects:
+            # gives speed itself in radial case
             angle = 2 * math.pi * random.random()
             speed = 1+0.5 * random.random()
             self.vx = speed * math.cos(angle)
             self.vy = speed * math.sin(angle)
 
     def update(self):
+        '''
+        Updates the animation
+        Return True if animation has ended
+        '''
+
         self.pos[0] += self.vx
         self.pos[1] += self.vy * (1 + (math.sin(2 * math.pi * random.random()) if 'float' in self.effects else 0))
+
         if 'gravity' in self.effects:
+
             if 'float' in self.effects:
                 self.vy += 0.02 
+
             else:
                 self.vy += 0.2 
+
         if 'sequence' in self.effects:
             return not ((0 < self.pos[0] < self.window_size[0]) and (0 < self.pos[1] < self.window_size[1]))
+        
         else:
             return self.anim.update()
 
     def render(self, surf):
+        '''
+        Renders the animation to given surface
+        '''
         surf.blit(self.anim.img(), self.pos)

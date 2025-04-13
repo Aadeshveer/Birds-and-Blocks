@@ -8,7 +8,7 @@ class Player:
     def __init__(self, game, identity, origin, block_map = None):
         self.game = game
         self.identity = identity
-        self.origin = origin
+        self.origin = origin # origin is the lowerleft most of tower
         # initializing tower
         if block_map is not None:
             self.block_map = BlockMap(self.game, origin, block_map)
@@ -29,17 +29,18 @@ class Player:
                     (1,3) : 'glass',
                 }
             )
+        # initailize the player deck of cards
         self.deck = Deck(
             self.game,
             (
                 self.game.display.get_width(),
                 self.game.display.get_height()
             ),
+            ['wood', 'wood', 'basic', 'basic', 'stone', 'stone', 'glass', 'glass'],
             (
                 origin[0] + ((self.block_map.tile_size[0] * 3 + 60) if self.identity == 0 else -92),
                 origin[1] - 60
             ),
-            ['wood', 'wood', 'basic', 'basic', 'stone', 'stone', 'glass', 'glass'],
             'left' if self.identity==0 else 'right'
         )
             
@@ -48,16 +49,25 @@ class Player:
         '''
         Renders all the blocks, projectiles, cards ... 
         '''
+        # always render block tower
         self.block_map.render(self.game.display)
+        
         if self.game.player_turn == self.identity:
+
             if self.game.mode in ['card_unpack']:
+                
                 if self.deck.unpack():
                     self.game.mode = 'card_select'
+                
                 else:
                     self.deck.render(sway=False)
+            
             if self.game.mode in ['card_select', 'play', 'in_air']:
+                
                 if self.deck.active == None:
                     self.game.scrolling = True
+                
                 else:
                     self.game.scrolling = False
+                
                 self.deck.play_deck()

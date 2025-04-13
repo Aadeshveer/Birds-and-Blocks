@@ -100,8 +100,10 @@ class game():
         # initializing clock
         self.clock = pygame.time.Clock()
 
+        # allow user scrolling
         self.scrolling = True
 
+        # manages all the simple particles for effects
         self.particles = Particles(self.window.get_size(),{
             'basic_feather' : self.assets['projectile']['basic']['feather'],
             'wood_feather' : self.assets['projectile']['wood']['feather'],
@@ -117,9 +119,13 @@ class game():
             'shards_stone' : self.assets['shards']['stone'],
         })
 
+        # player objects control moves of player
         self.player1 = Player(self, 0, (self.display.get_width() // 32,630))
         self.player2 = Player(self, 1, (self.display.get_width() - 3 * 64 - self.display.get_width() // 32,630))
+
+        # keeps track of which player's turn it is
         self.player_turn = 0
+
         # maintain a single mpos variable that will be passed to other functions
         self.mpos = (0, 0)
 
@@ -127,6 +133,7 @@ class game():
 
 
         while True:
+
             # filling skyblue in background
             self.display.fill('#87CEEB')
 
@@ -137,9 +144,9 @@ class game():
                     pygame.quit()
                     exit(0)
 
+                # window resize can cause errors in scaling
                 if event.type == pygame.VIDEORESIZE:
                     raise Exception('Window resize error')
-
 
             self.mpos = pygame.mouse.get_pos()
             self.scaled_mpos = (
@@ -150,14 +157,19 @@ class game():
             # scrolls the screen
             if self.mode in ['card_unpack', 'card_select']:
 
+                # a scale of 2 is best to view complete map
                 self.change_scaling(2, 14)
+
                 # value by which offset will move
                 delta = 0
 
+                # go left
                 if self.mpos[0] < self.window.get_width()/4:
                     delta = - (self.mpos[0] - self.window.get_width() / 4)/30
+                # go right
                 if self.mpos[0] > 3*self.window.get_width()/4:
                     delta = - (self.mpos[0] - 3 * self.window.get_width() / 4)/30
+                # makes sure x offset does not go out of bounds
                 self.off_set[0] = max(
                     min(
                         self.off_set[0] + delta,
@@ -168,10 +180,13 @@ class game():
 
                 delta = 0
                 
+                # go up
                 if self.mpos[1] < self.window.get_height()/4:
                     delta = - (self.mpos[1] - self.window.get_height() / 4)/30
+                # go down
                 if self.mpos[1] > 3*self.window.get_height()/4:
                     delta = - (self.mpos[1] - 3 * self.window.get_height() / 4)/30
+                # makes sure y offset does not go out of bounds
                 self.off_set[1] = max(
                     min(
                         self.off_set[1] + delta,
@@ -180,7 +195,7 @@ class game():
                     self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
                 )
 
-# [Updating the screen] -------------------------------------------------------------------------- #
+# [Updating and rendering the screen] -------------------------------------------------------------------------- #
 
 
 
@@ -204,6 +219,7 @@ class game():
                 )
             )
 
+            # renders the player 1 associated objects 
             self.player1.render()
             
             # blits arm 2 of slingshot 1
@@ -226,6 +242,7 @@ class game():
                 )
             )
 
+            # renders the player 2 associated objects
             self.player2.render()
             
             # blits arm 2 of slingshot 2
@@ -290,9 +307,16 @@ class game():
             self.clock.tick(60)
 
     def change_scaling(self, expected_scaling, ratio):
+        '''
+        Used to add a continuous effect in scale change, higher ratio results in a slower but smoother transition
+        '''
         self.scaling_factor = (ratio * self.scaling_factor + expected_scaling) / (ratio + 1)
 
     def get_player_by_id(self, id):
+        '''
+        Returns player by id
+        Used by various objects to get present playing player class through game class 
+        '''
         return self.player1 if id == 0 else self.player2
 
 while True:            
