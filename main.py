@@ -75,6 +75,14 @@ class game():
                 'stone' : Animation(load_images('blocks/stone'), img_dur = 1),
                 'royal' : Animation(load_images('blocks/royal'), img_dur = 1),
             },
+            'effects' : {
+                'dust' : Animation(load_images('effects/dust'), img_dur = 1, loop=False),
+            },
+            'shards' : {
+                'glass' : Animation(load_images('effects/shards/glass'), img_dur=10),
+                'wood' : Animation(load_images('effects/shards/wood'), img_dur=10),
+                'stone' : Animation(load_images('effects/shards/stone'), img_dur=10),
+            }
         }
 
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
@@ -94,7 +102,7 @@ class game():
 
         self.scrolling = True
 
-        self.particles = Particles({
+        self.particles = Particles(self.window.get_size(),{
             'basic_feather' : self.assets['projectile']['basic']['feather'],
             'wood_feather' : self.assets['projectile']['wood']['feather'],
             'stone_feather' : self.assets['projectile']['stone']['feather'],
@@ -103,6 +111,10 @@ class game():
             'wood_feather_flipped' : self.assets['projectile_flipped']['wood']['feather'],
             'stone_feather_flipped' : self.assets['projectile_flipped']['stone']['feather'],
             'glass_feather_flipped' : self.assets['projectile_flipped']['glass']['feather'],
+            'dust' : self.assets['effects']['dust'],
+            'shards_glass' : self.assets['shards']['glass'],
+            'shards_wood' : self.assets['shards']['wood'],
+            'shards_stone' : self.assets['shards']['stone'],
         })
 
         self.player1 = Player(self, 0, (self.display.get_width() // 32,630))
@@ -136,7 +148,7 @@ class game():
             )
             
             # scrolls the screen
-            if self.mode in ['card_unpack']:
+            if self.mode in ['card_unpack', 'card_select']:
 
                 self.change_scaling(2, 14)
                 # value by which offset will move

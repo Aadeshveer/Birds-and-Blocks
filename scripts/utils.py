@@ -24,6 +24,7 @@ def load_images(path, flip = False):
 class Animation:
     def __init__(self, images, img_dur = 5, loop = True):
         self.images = images
+        self.length = len(self.images)
         self.img_dur = img_dur
         self.loop = loop
         self.frame = 0
@@ -48,3 +49,4 @@ class Animation:
 
     def img(self):
         return self.images[int(self.frame / self.img_dur)]
+    

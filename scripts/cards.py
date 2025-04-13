@@ -46,9 +46,10 @@ class Deck:
 
     def find_pos(self):
         self.pos_list = []
-        for i,card in enumerate(self.cards):
-            x = self.map_size[0] / (2 * len(self.cards))* i + (self.map_size[0] / (2 * len(self.cards)) - card.img.get_width())
-            x = (self.map_size[0]-x if self.player == 'right' else x)
+        variation = (self.map_size[0] / 2 - CARD_WIDTH) // len(self.cards)
+        for i in range(len(self.cards)):
+            x = variation * i + 80
+            x = (self.map_size[0] - x - CARD_WIDTH if self.player == 'right' else x)
             y = 80
             self.pos_list.append((x,y))
 
