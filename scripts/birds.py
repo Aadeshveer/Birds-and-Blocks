@@ -9,10 +9,10 @@ HIT_SHAPE_MAP = {
 }
 
 DAMAGE_MAP = {
-    'basic' : (20,0),
-    'wood' : (20,0),
-    'stone' : (20,0),
-    'glass' : (20,0),
+    'basic' : (60,0),
+    'wood' : (60,0),
+    'stone' : (60,0),
+    'glass' : (60,0),
 }
 
 class Bird:
@@ -110,9 +110,12 @@ class Bird:
                 )
         for loc in rel_loc:
             if loc in self.game.get_player_by_id(to_hit).block_map.block_map:
-                self.game.particles.add_particles(self.type + '_feather', self.pos, 5)
-                if self.game.get_player_by_id(to_hit).block_map.block_map[loc].damage(self.damage()):
+                block = self.game.get_player_by_id(to_hit).block_map.block_map[loc]
+                self.game.particles.add_particles(self.type + '_feather', self.pos, effects = ['float','gravity'], num=5)
+                self.game.particles.add_particles('dust', self.pos, effects = ['radial'], num=5)
+                if block.damage(self.damage()):
                     self.game.get_player_by_id(to_hit).block_map.block_map.pop(loc)
+                    self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(to_hit).block_map.loc_to_pos(loc), effects=['gravity', 'sequence', 'radial'])
                 return True
         return False
     

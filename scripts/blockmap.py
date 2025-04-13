@@ -30,6 +30,15 @@ class BlockMap:
             img = self.block_map[loc].anim.img()
             surf.blit(img, (self.origin[0] + loc[0]*self.tile_size[0], self.origin[1] - loc[1]*self.tile_size[1] - img.get_height()))
         
+    def loc_to_pos(self, loc):
+        '''
+        Takes in a relative loc and returns pos according to its  origin
+        '''
+        return (
+            self.origin[0] + loc[0] * self.tile_size[0],
+            self.origin[1] - loc[1] * self.tile_size[1],
+        )
+
     def add_block(self, loc, type):
         '''
         Adds a block at relative location loc
