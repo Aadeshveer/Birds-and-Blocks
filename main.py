@@ -1,6 +1,7 @@
 import pygame as pygame
-from scripts.blockmap import BlockMap
+import math
 from scripts.player import Player
+from scripts.cards import Deck
 from scripts.utils import load_image, load_images, Animation
 from scripts.particles import Particles
 
@@ -64,10 +65,14 @@ class game():
                 },
             },
             'cards' : {
-                'basic' : load_image('cards/red/red.png'),
-                'wood' : load_image('cards/wood/wood.png'),
-                'stone' : load_image('cards/stone/stone.png'),
-                'glass' : load_image('cards/glass/glass.png'),
+                'basic' : load_image('cards/bird/red/red.png'),
+                'wood' : load_image('cards/bird/wood/wood.png'),
+                'stone' : load_image('cards/bird/stone/stone.png'),
+                'glass' : load_image('cards/bird/glass/glass.png'),
+                'upgrade_basic' : load_image('cards/bird/red/red.png'),
+                'upgrade_wood' : load_image('cards/bird/wood/wood.png'),
+                'upgrade_stone' : load_image('cards/bird/stone/stone.png'),
+                'upgrade_glass' : load_image('cards/bird/glass/glass.png'),
             },
             'blocks' : {
                 'glass' : Animation(load_images('blocks/glass'), img_dur = 1),
@@ -82,26 +87,21 @@ class game():
                 'glass' : Animation(load_images('effects/shards/glass'), img_dur=10),
                 'wood' : Animation(load_images('effects/shards/wood'), img_dur=10),
                 'stone' : Animation(load_images('effects/shards/stone'), img_dur=10),
+            },
+            'UI' : {
+                'title' : load_image('UI/title.png'),
+                'play_button' : Animation(load_images('UI/play_button'), img_dur=10),
             }
         }
 
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
         self.display = pygame.Surface((1280,720))
 
-        # scales the display to window for zoom effect
-        self.scaling_factor = 2
-
-        # moves the window for scroll effet
-        self.off_set = [0, 0]
-
         # mode dictates what is happening in game
-        self.mode = 'card_unpack'
+        self.mode = 'menu'
 
         # initializing clock
         self.clock = pygame.time.Clock()
-
-        # allow user scrolling
-        self.scrolling = True
 
         # manages all the simple particles for effects
         self.particles = Particles(self.window.get_size(),{
@@ -118,6 +118,34 @@ class game():
             'shards_wood' : self.assets['shards']['wood'],
             'shards_stone' : self.assets['shards']['stone'],
         })
+
+        # resets parts of game required for new game
+        self.reset()
+
+    def reset(self):
+
+        self.upgrade_cards = Deck(
+            self,
+            (
+                self.display.get_width(),
+                self.display.get_height(),
+            ),
+            ['upgrade_wood', 'upgrade_basic'],
+            (0,0),
+            'dealer',
+        )
+
+        # play button rect
+        self.play_button = pygame.Rect(124*4,134*4,74*4,29*4)
+
+        # scales the display to window for zoom effect
+        self.scaling_factor = 1
+
+        # moves the window for scroll effet
+        self.off_set = [0, 0]
+
+        # allow user scrolling
+        self.scrolling = True
 
         # player objects control moves of player
         self.player1 = Player(self, 0, (self.display.get_width() // 32,630))
@@ -155,10 +183,7 @@ class game():
             )
             
             # scrolls the screen
-            if self.mode in ['card_unpack', 'card_select']:
-
-                # a scale of 2 is best to view complete map
-                self.change_scaling(2, 14)
+            if self.mode in ['card_unpack', 'card_select', 'menu', 'upgrade_unpack', 'upgrade']:
 
                 # value by which offset will move
                 delta = 0
@@ -195,8 +220,11 @@ class game():
                     self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
                 )
 
-# [Updating and rendering the screen] -------------------------------------------------------------------------- #
+            if self.mode in ['card_unpack', 'card_select', 'upgrade_unpack', 'upgrade']:
+                # a scale of 2 is best to view complete map
+                self.change_scaling(2, 14)
 
+# [Updating and rendering the screen] -------------------------------------------------------------------------- #
 
 
             # blits the background mountains/scene
@@ -210,83 +238,96 @@ class game():
                 (0, 0)
             )
 
-            # blits arm 1 of slingshot 1
-            self.display.blit(
-                self.assets['launcher'][0],
-                (
-                    self.player1.block_map.tile_size[0] * 3 + self.display.get_width() // 16,
-                    648 - self.assets['launcher'][0].get_height()
+            # display main game mechanics in given conditions only
+            if self.mode in ['card_unpack', 'card_select', 'upgrade_unpack', 'upgrade']:
+
+                if self.mode in ['upgrade']:
+                    self.upgrade_cards.play_deck()
+                if self.mode in ['upgrade_unpack']:
+                    if self.upgrade_cards.unpack():
+                        self.mode = 'upgrade'
+
+
+
+                # blits arm 1 of slingshot 1
+                self.display.blit(
+                    self.assets['launcher'][0],
+                    (
+                        self.player1.block_map.tile_size[0] * 3 + self.display.get_width() // 16,
+                        648 - self.assets['launcher'][0].get_height()
+                    )
                 )
-            )
 
-            # renders the player 1 associated objects 
-            self.player1.render()
-            
-            # blits arm 2 of slingshot 1
-            self.display.blit(
-                self.assets['launcher'][1],
-                (
-                    self.player1.block_map.tile_size[1] * 3 + self.display.get_width() // 16,
-                    648 - self.assets['launcher'][1].get_height()
+                # renders the player 1 associated objects 
+                self.player1.render()
+                
+                # blits arm 2 of slingshot 1
+                self.display.blit(
+                    self.assets['launcher'][1],
+                    (
+                        self.player1.block_map.tile_size[1] * 3 + self.display.get_width() // 16,
+                        648 - self.assets['launcher'][1].get_height()
+                    )
                 )
-            )
 
 
 
-            # blits arm 1 of slingshot 2
-            self.display.blit(
-                self.assets['launcher_flipped'][0],
-                (
-                    self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][0].get_width(),
-                    648 - self.assets['launcher_flipped'][0].get_height()
+                # blits arm 1 of slingshot 2
+                self.display.blit(
+                    self.assets['launcher_flipped'][0],
+                    (
+                        self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][0].get_width(),
+                        648 - self.assets['launcher_flipped'][0].get_height()
+                    )
                 )
-            )
 
-            # renders the player 2 associated objects
-            self.player2.render()
-            
-            # blits arm 2 of slingshot 2
-            self.display.blit(
-                self.assets['launcher_flipped'][1],
-                (
-                    self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][1].get_width(),
-                    648 - self.assets['launcher_flipped'][1].get_height()
+                # renders the player 2 associated objects
+                self.player2.render()
+                
+                # blits arm 2 of slingshot 2
+                self.display.blit(
+                    self.assets['launcher_flipped'][1],
+                    (
+                        self.display.get_width() - 3 * 64 - 2 * self.display.get_width() // 32 - self.assets['launcher'][1].get_width(),
+                        648 - self.assets['launcher_flipped'][1].get_height()
+                    )
                 )
-            )
 
-            # taking care of x offset
-            self.off_set[0] = max(
-                min(
-                    self.off_set[0],
-                    0
-                ),
-                self.window.get_width() - 2 * self.window.get_width() / self.scaling_factor
-            )
-            # taking care of y offset
-            self.off_set[1] = max(
-                min(
-                    self.off_set[1],
-                    0
-                ),
-                self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
-            )
-            # taking care of scale value
-            self.scaling_factor = min(2, self.scaling_factor)
+                # taking care of x offset
+                self.off_set[0] = max(
+                    min(
+                        self.off_set[0],
+                        0
+                    ),
+                    self.window.get_width() - 2 * self.window.get_width() / self.scaling_factor
+                )
+                # taking care of y offset
+                self.off_set[1] = max(
+                    min(
+                        self.off_set[1],
+                        0
+                    ),
+                    self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
+                )
+                # taking care of scale value
+                self.scaling_factor = min(2, self.scaling_factor)
 
-            # display particles
-            self.particles.render(self.display)
-            self.particles.update()
+                # display particles
+                self.particles.render(self.display)
+                self.particles.update()
 
             # blits the foreground grass and foundations
             self.display.blit(
-                pygame.transform.scale(self.assets['background'][1],
-                    (
-                        self.display.get_width(),
-                        self.display.get_height()
-                    )
-                ),
-                (0, 0)
-            )
+                    pygame.transform.scale(self.assets['background'][1],
+                        (
+                            self.display.get_width(),
+                            self.display.get_height()
+                        )
+                    ),
+                    (0, 0)
+                )
+
+                
 
             # blits the scrolled and scaled display on window
             self.window.blit(
@@ -299,6 +340,46 @@ class game():
                 ),
                 self.off_set
             )
+
+            if self.mode in ['menu']:
+                
+                # blit the title
+                self.window.blit(
+                    pygame.transform.scale(
+                        self.assets['UI']['title'],
+                        (
+                            self.window.get_width(),
+                            self.window.get_height(),
+                        )
+                    ),
+                    (0, 10*math.sin(pygame.time.get_ticks() / 240))
+                )
+
+                # blit the play button
+                self.window.blit(
+                    pygame.transform.scale(
+                        self.assets['UI']['play_button'].img(),
+                        (
+                            self.window.get_width(),
+                            self.window.get_height(),
+                        )
+                    ),
+                    (0, 0)
+                )
+
+                # check for button press
+                if self.play_button.collidepoint(self.mpos[0], self.mpos[1]):
+
+                    if pygame.mouse.get_pressed(num_buttons=5)[0]:
+                        self.assets['UI']['play_button'].set_frame(21)
+
+                    elif self.assets['UI']['play_button'].get_frame() == 21:
+                        self.mode='card_unpack'
+                
+                    else:
+                        self.assets['UI']['play_button'].set_frame(11)
+                else:
+                    self.assets['UI']['play_button'].set_frame(0)
 
             # updates window
             pygame.display.update()

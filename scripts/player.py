@@ -8,6 +8,12 @@ class Player:
     def __init__(self, game, identity, origin, block_map = None):
         self.game = game
         self.identity = identity
+        self.upgrades = {
+            'basic' : 1,
+            'glass' : 1,
+            'wood' : 1,
+            'stone' : 1,
+        }
         self.origin = origin # origin is the lowerleft most of tower
         # initializing tower
         if block_map is not None:
@@ -36,7 +42,7 @@ class Player:
                 self.game.display.get_width(),
                 self.game.display.get_height()
             ),
-            ['wood', 'wood', 'basic', 'basic', 'stone', 'stone', 'glass', 'glass'],
+            ['wood', 'basic', 'stone', 'glass',],
             (
                 origin[0] + ((self.block_map.tile_size[0] * 3 + 60) if self.identity == 0 else -92),
                 origin[1] - 60
