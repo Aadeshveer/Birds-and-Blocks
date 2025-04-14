@@ -5,12 +5,20 @@ from .birds import Bird
 
 CARD_WIDTH = 64
 CARD_UPPER_BUFFER = 80
+CARD_HEIGHT = 96
 
 BIRDS = (
     'basic',
     'glass',
     'wood',
     'stone',
+)
+
+UPGRADES = (
+    'basicU',
+    'glassU',
+    'woodU',
+    'stoneU',
 )
 
 class Deck:
@@ -25,36 +33,31 @@ class Deck:
         self.active = None # index of card being run
         self.pack_ctr = 0 # Helps in smoother transaction for unpacking
         self.rect_list = [] # stores rects for all cards
-        self.cards = [] # stores all the card objects
-        
-        for card_type in cards:
+        self.cards_types = cards # stores all the card strings till reload converts them to objects
+        self.cards = []
+        self.reload_cards()
+
+    def reload_cards(self):
+
+        for card_type in self.cards_types:
     
-            self.cards.append(Card(self.game, card_type, map_size, origin, player))
+            self.cards.append(Card(self.game, card_type, self.map_size, self.origin, self.player))
         
         for card in self.cards:
         
-            if player=='left':
+            if self.player=='left':
                 self.rect_list.append(card.rect((0,CARD_UPPER_BUFFER)))
 
-            else:
+            elif self.player=='right':
                 self.rect_list.append(card.rect((self.map_size[0] - CARD_WIDTH, CARD_UPPER_BUFFER)))
+
+            else:
+                self.rect_list.append(card.rect(((self.map_size[0]-CARD_WIDTH)/2,-CARD_HEIGHT)))
 
         # create a list of positions for cards
         self.find_pos()
 
-        # by default smoothly transition cards from default to expected position
-        self.unpack()
 
-    def render(self, sway = True):
-        '''
-        Renders the cards and takes care of card selection
-        '''
-        for i,rect in enumerate(self.rect_list):
-            random.seed(i)
-            self.game.display.blit(self.cards[i].img, (rect.left, rect.top +((3+6*random.random())*math.sin(pygame.time.get_ticks()/200 + random.random()) if sway else 0)))
-            if rect.collidepoint(self.game.scaled_mpos):
-                if pygame.mouse.get_pressed()[0]:
-                    self.active = i
 
     def find_pos(self):
         '''
@@ -62,14 +65,15 @@ class Deck:
         '''
         self.pos_list = []
 
-        variation = (self.map_size[0] / 2 - CARD_WIDTH) // len(self.cards)
+        if len(self.cards):
+            variation = (self.map_size[0] / (1 if self.player == 'dealer' else 2) - CARD_WIDTH) / (len(self.cards) + 1)
         
         for i in range(len(self.cards)):
         
-            x = variation * i + 80
+            x = variation * (i+1) + i * CARD_WIDTH
             x = (self.map_size[0] - x - CARD_WIDTH if self.player == 'right' else x)
         
-            y = 80
+            y = CARD_UPPER_BUFFER
         
             self.pos_list.append((x,y))
 
@@ -82,7 +86,7 @@ class Deck:
 
         else:
 
-            if not self.cards[self.active].bird():
+            if not self.cards[self.active].act():
                 # runs when a cards action finishes and resets everything for next player
                 self.cards.pop(self.active)
                 self.rect_list.pop(self.active)
@@ -90,6 +94,8 @@ class Deck:
                 self.active = None
                 self.game.player_turn += 1
                 self.game.player_turn %= 2
+                if len(self.game.get_player_by_id(self.game.player_turn).deck.cards) == 0:
+                    self.game.mode = 'upgrade_unpack'
                 self.find_pos()
 
     def unpack(self):
@@ -110,6 +116,16 @@ class Deck:
         else:
             return False
 
+    def render(self, sway = True):
+        '''
+        Renders the cards and takes care of card selection
+        '''
+        for i,rect in enumerate(self.rect_list):
+            random.seed(i)
+            self.game.display.blit(self.cards[i].img, (rect.left, rect.top +((3+6*random.random())*math.sin(pygame.time.get_ticks()/200 + random.random()) if sway else 0)))
+            if rect.collidepoint(self.game.scaled_mpos):
+                if pygame.mouse.get_pressed()[0]:
+                    self.active = i
         
             
 
@@ -127,21 +143,31 @@ class Card:
         # if a bird calling card declares a bird projectile
         if self.type in BIRDS:
             self.projectile = Bird(self.game, self.map_size, self.type, self.origin, mode='ready', flip = self.player == 'right')
+        else:
+            self.projectile = None
+        # if self.type in UPGRADES:
 
-    def bird(self):
+    def act(self):
         '''
-        Updates the bird
-        Returns if bird is alive
+        Updates the action
+        Returns True if action is in place
         '''
-        if pygame.mouse.get_pressed()[1]:
-            self.projectile.mode = 'ready'
+        if self.projectile != None:
+            if pygame.mouse.get_pressed()[1]:
+                self.projectile.mode = 'ready'
+            
+            if not self.projectile.update():
+                return False
+            
+            self.projectile.render()
+
+            return True
         
-        if not self.projectile.update():
+        else:
+            self.game.get_player_by_id(self.game.player_turn).upgrades[self.type.split('_')[1]] += 1
+            self.game.get_player_by_id(self.game.player_turn).deck.cards_types = ['basic', 'wood', 'glass', 'stone']
+            self.game.get_player_by_id(self.game.player_turn).deck.reload_cards()
             return False
-        
-        self.projectile.render()
-
-        return True
 
     def rect(self, pos):
         '''

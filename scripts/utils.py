@@ -63,6 +63,12 @@ class Animation:
             raise Exception('Entered frame is out of range')
         self.frame = frame
 
+    def get_frame(self):
+        '''
+        Returns present frame of animation
+        '''
+        return self.frame
+
     def img(self):
         '''
         Returns the present frame image for rendering

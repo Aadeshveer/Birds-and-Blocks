@@ -189,5 +189,5 @@ class Bird:
         '''
         Returns damage of bird
         '''
-        return DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)
+        return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)) * self.game.get_player_by_id(self.game.player_turn).upgrades[self.type]
         
