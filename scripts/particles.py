@@ -21,6 +21,8 @@ class Particles:
             radial: gives a random initial radial velocity
             float: gives the particle random up push to cause variable velocity along y axis
             gravity: adds gravity to motion of particle
+            truncated: removes few inital frames
+            fast: launches the particle at high speed
         '''
         
         if num == None:
@@ -80,6 +82,8 @@ class Particle:
         if idx != None:
             self.anim.set_frame(10*idx)
         
+        elif 'truncated' in self.effects:
+            self.anim.set_frame(8)
         else:
             self.anim.set_frame(30*int(random.random()))
         
@@ -87,13 +91,13 @@ class Particle:
 
         self.pos = list(pos)
         
-        self.vx = vx
-        self.vy = vy
+        self.vx = vx * (10 if 'fast' in self.effects else 1)
+        self.vy = vy * (10 if 'fast' in self.effects else 1)
         
         if 'radial' in self.effects:
             # gives speed itself in radial case
             angle = 2 * math.pi * random.random()
-            speed = 1+0.5 * random.random()
+            speed = (1+0.5 * random.random()) * (5 if 'fast' in self.effects else 1)
             self.vx = speed * math.cos(angle)
             self.vy = speed * math.sin(angle)
 

@@ -69,10 +69,10 @@ class game():
                 'wood' : load_image('cards/bird/wood/wood.png'),
                 'stone' : load_image('cards/bird/stone/stone.png'),
                 'glass' : load_image('cards/bird/glass/glass.png'),
-                'upgrade_basic' : load_image('cards/bird/red/red.png'),
-                'upgrade_wood' : load_image('cards/bird/wood/wood.png'),
-                'upgrade_stone' : load_image('cards/bird/stone/stone.png'),
-                'upgrade_glass' : load_image('cards/bird/glass/glass.png'),
+                'upgrade_basic' : load_image('cards/upgrade/red/red.png'),
+                'upgrade_wood' : load_image('cards/upgrade/wood/wood.png'),
+                'upgrade_stone' : load_image('cards/upgrade/stone/stone.png'),
+                'upgrade_glass' : load_image('cards/upgrade/glass/glass.png'),
             },
             'blocks' : {
                 'glass' : Animation(load_images('blocks/glass'), img_dur = 1),
@@ -82,6 +82,7 @@ class game():
             },
             'effects' : {
                 'dust' : Animation(load_images('effects/dust'), img_dur = 1, loop=False),
+                'particle' : Animation(load_images('effects/particles'), img_dur=3, loop=False)
             },
             'shards' : {
                 'glass' : Animation(load_images('effects/shards/glass'), img_dur=10),
@@ -113,10 +114,11 @@ class game():
             'wood_feather_flipped' : self.assets['projectile_flipped']['wood']['feather'],
             'stone_feather_flipped' : self.assets['projectile_flipped']['stone']['feather'],
             'glass_feather_flipped' : self.assets['projectile_flipped']['glass']['feather'],
-            'dust' : self.assets['effects']['dust'],
             'shards_glass' : self.assets['shards']['glass'],
             'shards_wood' : self.assets['shards']['wood'],
             'shards_stone' : self.assets['shards']['stone'],
+            'dust' : self.assets['effects']['dust'],
+            'particle' : self.assets['effects']['particle'],
         })
 
         # resets parts of game required for new game
@@ -130,7 +132,7 @@ class game():
                 self.display.get_width(),
                 self.display.get_height(),
             ),
-            ['upgrade_wood', 'upgrade_basic'],
+            ['upgrade_wood', 'upgrade_basic', 'upgrade_stone', 'upgrade_glass'],
             (0,0),
             'dealer',
         )
@@ -393,11 +395,17 @@ class game():
         '''
         self.scaling_factor = (ratio * self.scaling_factor + expected_scaling) / (ratio + 1)
 
-    def get_player_by_id(self, id):
+    def get_player_by_id(self, id=None):
         '''
-        Returns player by id
+        Returns player by id(return player by default)
         Used by various objects to get present playing player class through game class 
         '''
+        if id == None:
+            return self.player1 if self.player_turn == 0 else self.player2
+        
+        if id == -1:
+            return self.player2 if self.player_turn == 0 else self.player1
+            
         return self.player1 if id == 0 else self.player2
 
 while True:            

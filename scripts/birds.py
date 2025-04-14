@@ -11,10 +11,10 @@ HIT_SHAPE_MAP = {
 }
 
 DAMAGE_MAP = {
-    'basic' : (60,0),
-    'wood' : (60,0),
-    'stone' : (60,0),
-    'glass' : (60,0),
+    'basic' : (20,2),
+    'wood' : (20,2),
+    'stone' : (20,2),
+    'glass' : (20,2),
 }
 
 class Bird:
@@ -40,6 +40,51 @@ class Bird:
         Returns true if bird is in screen False if offscreen
         '''
         pos = list(self.pos)
+        upgrade_index = self.game.get_player_by_id().upgrades[self.type]
+        if pygame.mouse.get_pressed()[0] and upgrade_index > 1:
+            if self.power:
+                match self.type:
+                    
+                    case 'wood':
+                        self.v += 4 * (-1 if self.flip else 1) * upgrade_index
+                        self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=5)
+
+                    case 'stone':
+                        rel_loc = (
+                            (self.pos[0] - self.game.get_player_by_id(-1).origin[0] - self.hit_shape[0] / 2) / self.game.get_player_by_id(-1).block_map.tile_size[0],
+                            (- self.pos[1] + self.game.get_player_by_id(-1).origin[1] - self.hit_shape[1] / 2) / self.game.get_player_by_id(-1).block_map.tile_size[1],
+                        )
+                        for block_loc in self.game.get_player_by_id(-1).block_map.block_map.copy():
+                            block = self.game.get_player_by_id(-1).block_map.block_map[block_loc]
+                            loc = (
+                                block_loc[0] + 0.5,
+                                block_loc[1] + 0.5,
+                            )
+                            dist = math.dist(rel_loc, loc)
+
+                            if dist < 3:
+                                self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','fast'], num=40)
+                                if (self.game.get_player_by_id(-1).block_map.block_map[block_loc].damage(30 * (1 - dist/3) * upgrade_index)):
+                                    # runs if block is destroyed
+                                    self.game.get_player_by_id(-1).block_map.block_map.pop(block_loc)
+                                    # run broken bird shard animation
+                                    self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(-1).block_map.loc_to_pos(block_loc), effects=['gravity', 'sequence', 'radial'])
+                        
+                        pos[0] += self.map_size[0]
+                        
+
+                    case 'glass':
+                        # TODO: implement multiply
+                        pass
+
+                    case 'basic':
+                        DAMAGE_MAP[self.type] *= 3
+
+                self.power = False
+        if not self.power:
+            match self.type:
+                case 'wood':
+                    self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','truncated'], num=1)
 
         pos[0] += self.v.real
         pos[1] += self.v.imag
@@ -71,7 +116,7 @@ class Bird:
             if (
                 pygame.mouse.get_pressed()[0]
                 and
-                math.dist((self.origin[0] + 16, self.origin[1] + 16), self.game.scaled_mpos) < 20 # we can click in 20 pixel radius of center of sprite
+                math.dist((self.origin[0] + 16, self.origin[1] + 16), self.game.scaled_mpos) < 30 # we can click in 30 pixel radius of center of sprite
             ):
                 self.mode = 'aiming'
 
@@ -91,6 +136,8 @@ class Bird:
                     )
 
             else:
+                
+                self.power = True
                 
                 self.mode = 'in_air'
                 self.animation = self.game.assets[self.anim_id][self.type]['in_air'].copy()
@@ -149,7 +196,7 @@ class Bird:
         to_hit = (playing + 1) % 2
 
         # origin of to hit player
-        origin = self.game.get_player_by_id(to_hit).origin
+        origin = self.game.get_player_by_id(-1).origin
         
         rel_loc = [] # location of bird vertices of hit box of bird relative to origin
 
@@ -159,16 +206,16 @@ class Bird:
             
                 rel_loc.append(
                     (
-                        (self.pos[0] - origin[0] - self.hit_shape[0] + i * self.hit_shape[2]) // self.game.get_player_by_id(to_hit).block_map.tile_size[0],
-                        (- self.pos[1] + origin[1] - self.hit_shape[1] + j * self.hit_shape[2]) // self.game.get_player_by_id(to_hit).block_map.tile_size[1],
+                        (self.pos[0] - origin[0] - self.hit_shape[0] + i * self.hit_shape[2]) // self.game.get_player_by_id(-1).block_map.tile_size[0],
+                        (- self.pos[1] + origin[1] - self.hit_shape[1] + j * self.hit_shape[2]) // self.game.get_player_by_id(-1).block_map.tile_size[1],
                     )
                 )
         
         for loc in rel_loc:
 
-            if loc in self.game.get_player_by_id(to_hit).block_map.block_map: # there is a block placed at given location
+            if loc in self.game.get_player_by_id(-1).block_map.block_map: # there is a block placed at given location
             
-                block = self.game.get_player_by_id(to_hit).block_map.block_map[loc]
+                block = self.game.get_player_by_id(-1).block_map.block_map[loc]
 
                 # add bird feathers effect
                 self.game.particles.add_particles(self.type + '_feather', self.pos, effects = ['float','gravity','random'], num=5)
@@ -177,9 +224,9 @@ class Bird:
 
                 if block.damage(self.damage()):
                     # runs if block is destroyed
-                    self.game.get_player_by_id(to_hit).block_map.block_map.pop(loc)
+                    self.game.get_player_by_id(-1).block_map.block_map.pop(loc)
                     # run broken bird shard animation
-                    self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(to_hit).block_map.loc_to_pos(loc), effects=['gravity', 'sequence', 'radial'])
+                    self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(-1).block_map.loc_to_pos(loc), effects=['gravity', 'sequence', 'radial'])
                 
                 return True
         
@@ -189,5 +236,5 @@ class Bird:
         '''
         Returns damage of bird
         '''
-        return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)) * self.game.get_player_by_id(self.game.player_turn).upgrades[self.type]
+        return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v))
         

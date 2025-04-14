@@ -12,7 +12,7 @@ class Player:
             'basic' : 1,
             'glass' : 1,
             'wood' : 1,
-            'stone' : 1,
+            'stone' : 2,
         }
         self.origin = origin # origin is the lowerleft most of tower
         # initializing tower
@@ -25,14 +25,13 @@ class Player:
                 {
                     (0,0) : 'stone',
                     (2,0) : 'stone',
-                    (1,0) : 'royal',
-                    (1,1) : 'stone',
+                    (1,0) : 'stone',
                     (0,1) : 'wood',
+                    (1,1) : 'wood',
                     (2,1) : 'wood',
-                    (1,2) : 'wood',
                     (0,2) : 'glass',
+                    (1,2) : 'glass',
                     (2,2) : 'glass',
-                    (1,3) : 'glass',
                 }
             )
         # initailize the player deck of cards
@@ -42,7 +41,7 @@ class Player:
                 self.game.display.get_width(),
                 self.game.display.get_height()
             ),
-            ['wood', 'basic', 'stone', 'glass',],
+            ['stone'],#, 'basic', 'stone', 'glass',],
             (
                 origin[0] + ((self.block_map.tile_size[0] * 3 + 60) if self.identity == 0 else -92),
                 origin[1] - 60
