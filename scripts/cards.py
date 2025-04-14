@@ -94,7 +94,7 @@ class Deck:
                 self.active = None
                 self.game.player_turn += 1
                 self.game.player_turn %= 2
-                if len(self.game.get_player_by_id(self.game.player_turn).deck.cards) == 0:
+                if len(self.game.get_player_by_id().deck.cards) == 0:
                     self.game.mode = 'upgrade_unpack'
                 self.find_pos()
 
@@ -153,6 +153,7 @@ class Card:
         Returns True if action is in place
         '''
         if self.projectile != None:
+
             if pygame.mouse.get_pressed()[1]:
                 self.projectile.mode = 'ready'
             
@@ -164,9 +165,9 @@ class Card:
             return True
         
         else:
-            self.game.get_player_by_id(self.game.player_turn).upgrades[self.type.split('_')[1]] += 1
-            self.game.get_player_by_id(self.game.player_turn).deck.cards_types = ['basic', 'wood', 'glass', 'stone']
-            self.game.get_player_by_id(self.game.player_turn).deck.reload_cards()
+            self.game.get_player_by_id().upgrades[self.type.split('_')[1]] += 1
+            self.game.get_player_by_id().deck.cards_types = ['basic', 'wood', 'glass', 'stone']
+            self.game.get_player_by_id().deck.reload_cards()
             return False
 
     def rect(self, pos):
