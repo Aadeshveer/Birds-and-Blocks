@@ -1,3 +1,4 @@
+import pygame
 from .blockmap import BlockMap
 from .cards import Deck
 
@@ -11,7 +12,7 @@ class Player:
         self.upgrades = {
             'basic' : 1,
             'glass' : 1,
-            'wood' : 1,
+            'wood' : 2,
             'stone' : 2,
         }
         self.origin = origin # origin is the lowerleft most of tower
