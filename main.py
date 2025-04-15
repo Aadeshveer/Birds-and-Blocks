@@ -1,19 +1,27 @@
 import pygame as pygame
-import math
+
+from scripts.modes import Menu, NameInput
 from scripts.player import Player
 from scripts.cards import Deck
 from scripts.utils import load_image, load_images, Animation
 from scripts.particles import Particles
+
+PLAY_MODES = ['card_unpack', 'card_select', 'upgrade_unpack', 'upgrade']
 
 class game():
     def __init__(self):
 
         pygame.init()
 
+        pygame.font.init()
+
+        pygame.mixer.init()
+
         pygame.display.set_caption('Birds and Blocks')
 
         # window will be the main window to be displayed on scree
         self.window = pygame.display.set_mode((1280,720))
+
 
         # loading all the assets to prevent lag once game has started
         self.assets = {
@@ -90,10 +98,22 @@ class game():
                 'stone' : Animation(load_images('effects/shards/stone'), img_dur=10),
             },
             'UI' : {
-                'title' : load_image('UI/title.png'),
-                'play_button' : Animation(load_images('UI/play_button'), img_dur=10),
-            }
+                'title' : load_image('UI/menu/title.png'),
+                'play_button' : Animation(load_images('UI/menu/play_button'), img_dur=10),
+                'player_name' : {
+                    'left' : Animation(load_images('UI/player_name/1'), img_dur=10),
+                    'right' : Animation(load_images('UI/player_name/2'), img_dur=10),
+                },
+            },
         }
+
+        self.fonts = {
+            'monospace' : pygame.font.Font('assets/fonts/custom_font.ttf'),
+            'default' : pygame.font.Font('assets/fonts/Baskic8.otf'),
+        }
+
+        self.menu = Menu(self, self.assets['UI'])
+        
 
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
         self.display = pygame.Surface((1280,720))
@@ -137,8 +157,7 @@ class game():
             'dealer',
         )
 
-        # play button rect
-        self.play_button = pygame.Rect(124*4,134*4,74*4,29*4)
+        self.name_handler = NameInput(self, self.assets['UI'])
 
         # scales the display to window for zoom effect
         self.scaling_factor = 1
@@ -177,6 +196,12 @@ class game():
                 # window resize can cause errors in scaling
                 if event.type == pygame.VIDEORESIZE:
                     raise Exception('Window resize error')
+                
+                if self.mode == 'name_input':
+
+                    self.name_handler.take_input(event)
+
+                        
 
             self.mpos = pygame.mouse.get_pos()
             self.scaled_mpos = (
@@ -185,7 +210,7 @@ class game():
             )
             
             # scrolls the screen
-            if self.mode in ['card_unpack', 'card_select', 'menu', 'upgrade_unpack', 'upgrade']:
+            if self.mode in ['card_unpack', 'card_select', 'menu', 'upgrade_unpack', 'upgrade', 'name_input', 'read']:
 
                 # value by which offset will move
                 delta = 0
@@ -222,7 +247,7 @@ class game():
                     self.window.get_height() - 2 * self.window.get_height() / self.scaling_factor
                 )
 
-            if self.mode in ['card_unpack', 'card_select', 'upgrade_unpack', 'upgrade']:
+            if self.mode in PLAY_MODES:
                 # a scale of 2 is best to view complete map
                 self.change_scaling(2, 14)
 
@@ -241,7 +266,7 @@ class game():
             )
 
             # display main game mechanics in given conditions only
-            if self.mode in ['card_unpack', 'card_select', 'upgrade_unpack', 'upgrade']:
+            if self.mode in PLAY_MODES:
 
                 if self.mode in ['upgrade']:
                     self.upgrade_cards.play_deck()
@@ -343,45 +368,18 @@ class game():
                 self.off_set
             )
 
+
+            if self.mode in PLAY_MODES + ['name_input', 'read']:
+                self.name_handler.render(self.window)
+
+
+            if self.mode in ['name_input']:
+                self.name_handler.update()
+
             if self.mode in ['menu']:
+                self.menu.update()
+                self.menu.render(self.window)
                 
-                # blit the title
-                self.window.blit(
-                    pygame.transform.scale(
-                        self.assets['UI']['title'],
-                        (
-                            self.window.get_width(),
-                            self.window.get_height(),
-                        )
-                    ),
-                    (0, 10*math.sin(pygame.time.get_ticks() / 240))
-                )
-
-                # blit the play button
-                self.window.blit(
-                    pygame.transform.scale(
-                        self.assets['UI']['play_button'].img(),
-                        (
-                            self.window.get_width(),
-                            self.window.get_height(),
-                        )
-                    ),
-                    (0, 0)
-                )
-
-                # check for button press
-                if self.play_button.collidepoint(self.mpos[0], self.mpos[1]):
-
-                    if pygame.mouse.get_pressed(num_buttons=5)[0]:
-                        self.assets['UI']['play_button'].set_frame(21)
-
-                    elif self.assets['UI']['play_button'].get_frame() == 21:
-                        self.mode='card_unpack'
-                
-                    else:
-                        self.assets['UI']['play_button'].set_frame(11)
-                else:
-                    self.assets['UI']['play_button'].set_frame(0)
 
             # updates window
             pygame.display.update()
