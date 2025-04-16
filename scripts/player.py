@@ -1,4 +1,3 @@
-import pygame
 from .blockmap import BlockMap
 from .cards import Deck
 
@@ -12,8 +11,8 @@ class Player:
         self.upgrades = {
             'basic' : 1,
             'glass' : 1,
-            'wood' : 2,
-            'stone' : 2,
+            'wood' : 1,
+            'stone' : 1,
         }
         self.origin = origin # origin is the lowerleft most of tower
         # initializing tower
@@ -24,15 +23,24 @@ class Player:
                 self.game,
                 origin,
                 {
-                    (0,0) : 'stone',
-                    (2,0) : 'stone',
-                    (1,0) : 'stone',
-                    (0,1) : 'wood',
-                    (1,1) : 'wood',
-                    (2,1) : 'wood',
-                    (0,2) : 'glass',
-                    (1,2) : 'glass',
+                    # (0,0) : 'stone',
+                    # (2,0) : 'stone',
+                    # (1,0) : 'stone',
+                    # (0,1) : 'wood',
+                    # (1,1) : 'wood',
+                    # (2,1) : 'wood',
+                    # (0,2) : 'glass',
+                    # (1,2) : 'glass',
                     (2,2) : 'glass',
+                    # (0,3) : 'stone',
+                    # (2,3) : 'stone',
+                    # (1,3) : 'stone',
+                    # (0,4) : 'wood',
+                    # (1,4) : 'wood',
+                    # (2,4) : 'wood',
+                    # (0,5) : 'glass',
+                    # (1,5) : 'glass',
+                    # (2,5) : 'glass',
                 }
             )
         # initailize the player deck of cards
@@ -42,14 +50,14 @@ class Player:
                 self.game.display.get_width(),
                 self.game.display.get_height()
             ),
-            ['stone'],#, 'basic', 'stone', 'glass',],
+            ['glass', 'basic', 'stone', 'wood',],
             (
                 origin[0] + ((self.block_map.tile_size[0] * 3 + 60) if self.identity == 0 else -92),
                 origin[1] - 60
             ),
             'left' if self.identity==0 else 'right'
         )
-            
+
 
     def render(self):
         '''
@@ -57,23 +65,23 @@ class Player:
         '''
         # always render block tower
         self.block_map.render(self.game.display)
-        
+
         if self.game.player_turn == self.identity:
 
             if self.game.mode in ['card_unpack']:
-                
+
                 if self.deck.unpack():
                     self.game.mode = 'card_select'
-                
+
                 else:
                     self.deck.render(sway=False)
-            
+
             if self.game.mode in ['card_select', 'play', 'in_air']:
-                
+
                 if self.deck.active == None:
                     self.game.scrolling = True
-                
+
                 else:
                     self.game.scrolling = False
-                
+
                 self.deck.play_deck()

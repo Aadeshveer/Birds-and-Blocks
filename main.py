@@ -1,6 +1,6 @@
 import pygame as pygame
 
-from scripts.modes import Menu, NameInput
+from scripts.modes import Menu, NameInput, GameOver
 from scripts.player import Player
 from scripts.cards import Deck
 from scripts.utils import load_image, load_images, Animation
@@ -100,6 +100,9 @@ class game():
             'UI' : {
                 'title' : load_image('UI/menu/title.png'),
                 'play_button' : Animation(load_images('UI/menu/play_button'), img_dur=10),
+                'game_over' : load_image('UI/game_over/game_over.png'),
+                'winner' : load_image('UI/game_over/winner_box.png'),
+                'menu_button' : Animation(load_images('UI/game_over/menu_button'), img_dur=10),
                 'player_name' : {
                     'left' : Animation(load_images('UI/player_name/1'), img_dur=10),
                     'right' : Animation(load_images('UI/player_name/2'), img_dur=10),
@@ -112,8 +115,6 @@ class game():
             'default' : pygame.font.Font('assets/fonts/Baskic8.otf'),
         }
 
-        self.menu = Menu(self, self.assets['UI'])
-        
 
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
         self.display = pygame.Surface((1280,720))
@@ -157,7 +158,15 @@ class game():
             'dealer',
         )
 
+        self.menu = Menu(self, self.assets['UI'])
+
+        self.game_over = GameOver(self, self.assets['UI'])
+
+        self.winner = 'None'
+
         self.name_handler = NameInput(self, self.assets['UI'])
+
+        self.particles.reset()
 
         # scales the display to window for zoom effect
         self.scaling_factor = 1
@@ -180,7 +189,6 @@ class game():
 
     def run(self):
 
-
         while True:
 
             # filling skyblue in background
@@ -196,21 +204,20 @@ class game():
                 # window resize can cause errors in scaling
                 if event.type == pygame.VIDEORESIZE:
                     raise Exception('Window resize error')
-                
+
                 if self.mode == 'name_input':
 
                     self.name_handler.take_input(event)
 
-                        
 
             self.mpos = pygame.mouse.get_pos()
             self.scaled_mpos = (
                 (self.mpos[0] - self.off_set[0]) * self.scaling_factor / 2,
                 (self.mpos[1] - self.off_set[1]) * self.scaling_factor / 2
             )
-            
+
             # scrolls the screen
-            if self.mode in ['card_unpack', 'card_select', 'menu', 'upgrade_unpack', 'upgrade', 'name_input', 'read']:
+            if self.mode in ['card_unpack', 'card_select', 'menu', 'upgrade_unpack', 'upgrade', 'name_input','game_over']:
 
                 # value by which offset will move
                 delta = 0
@@ -253,6 +260,13 @@ class game():
 
 # [Updating and rendering the screen] -------------------------------------------------------------------------- #
 
+            if len(self.player1.block_map.block_map) == 0:
+                self.winner = self.name_handler.get_name(1)
+                self.mode = 'game_over'
+            elif len(self.player2.block_map.block_map) == 0:
+                self.winner = self.name_handler.get_name(0)
+                self.mode = 'game_over'
+            
 
             # blits the background mountains/scene
             self.display.blit(
@@ -354,7 +368,6 @@ class game():
                     (0, 0)
                 )
 
-                
 
             # blits the scrolled and scaled display on window
             self.window.blit(
@@ -368,10 +381,8 @@ class game():
                 self.off_set
             )
 
-
-            if self.mode in PLAY_MODES + ['name_input', 'read']:
+            if self.mode in PLAY_MODES + ['name_input']:
                 self.name_handler.render(self.window)
-
 
             if self.mode in ['name_input']:
                 self.name_handler.update()
@@ -379,11 +390,15 @@ class game():
             if self.mode in ['menu']:
                 self.menu.update()
                 self.menu.render(self.window)
-                
+
+            if self.mode in ['game_over']:
+                self.game_over.update()
+                self.game_over.render(self.window)
+
 
             # updates window
             pygame.display.update()
-            
+
             # set fps to 60
             self.clock.tick(60)
 
@@ -400,13 +415,13 @@ class game():
         '''
         if id == None:
             return self.player1 if self.player_turn == 0 else self.player2
-        
+
         if id == -1:
             return self.player2 if self.player_turn == 0 else self.player1
-            
+
         return self.player1 if id == 0 else self.player2
 
-while True:            
+while True:
     try:
         game().run()
     except Exception as e:

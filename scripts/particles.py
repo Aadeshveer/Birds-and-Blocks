@@ -62,6 +62,9 @@ class Particles:
         for particle in self.particles:
             particle.render(surf)
 
+    def reset(self):
+        self.particles = []
+
 class Particle:
     '''
     Handles non interactve special effects

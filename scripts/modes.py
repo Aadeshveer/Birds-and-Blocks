@@ -4,8 +4,11 @@ import math
 class Menu:
     def __init__(self, game, assets):
         self.game = game
-        self.assets = assets
-        
+        self.assets = {
+            'play_button' : assets['play_button'].copy(),
+            'title' : assets['title'],
+        }
+
         # play button rect
         self.play_button = pygame.Rect(124*4,134*4,74*4,29*4)
 
@@ -18,9 +21,10 @@ class Menu:
 
             elif self.assets['play_button'].get_frame() == 21:
                 self.game.mode='name_input'
-        
+
             else:
                 self.assets['play_button'].set_frame(11)
+
         else:
             self.assets['play_button'].set_frame(0)
 
@@ -53,10 +57,15 @@ class Menu:
 
 
 class NameInput:
-    
+
     def __init__(self, game, assets):
         self.game = game
-        self.assets = assets
+        self.assets = {
+            'player_name' : {
+                'left' :  assets['player_name']['left'].copy(),
+                'right' :  assets['player_name']['right'].copy(),
+            },
+        }
         self.name_rect1 = pygame.rect.Rect(10, self.game.window.get_height() - 56, 224, 42)
         self.name_rect2 = pygame.rect.Rect(self.game.window.get_width() - 234 , self.game.window.get_height() - 56, 224, 42)
         self.name1 = ''
@@ -65,11 +74,10 @@ class NameInput:
         self.player_turn = 0
         self.read = False
 
-
     def take_input(self, event):
 
         if self.read:
-        
+
             if event.type == pygame.KEYDOWN:
 
                 if event.key == pygame.K_BACKSPACE:
@@ -77,17 +85,22 @@ class NameInput:
                         self.name1 = self.name1[:-1]
                     else:
                         self.name2 = self.name2[:-1]
-            
-                elif event.key == pygame.K_RETURN:
 
+                elif event.key in [pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_TAB]:
+                    self.assets['player_name']['left' if self.player_turn == 0 else 'right'].set_frame(30)
                     self.player_turn += 1
                     self.player_turn %= 2
-                    
-                    self.read = False
+
+                    self.read = (event.key == pygame.K_TAB)
 
                     if self.get_name(self.player_turn) != '':
                         self.game.mode = 'card_unpack'
-                
+                        self.read = False
+                    
+                    if self.read:
+                        self.assets['player_name']['left' if self.player_turn == 0 else 'right'].set_frame(20)
+
+
                 else:
                     if self.player_turn == 0:
                         self.name1 += event.unicode.upper()
@@ -96,36 +109,38 @@ class NameInput:
 
     def update(self):
 
-        if self.assets['player_name']['left'].get_frame() == 21:
-            pass
+        if not self.read:
 
-        elif self.name_rect1.collidepoint(self.game.mpos[0], self.game.mpos[1]):
+            if self.assets['player_name']['left'].get_frame() in [20,30]:
+                pass
 
-            if pygame.mouse.get_pressed()[0]:
-                self.assets['player_name']['left'].set_frame(21)
-                self.read = True
+            elif self.name_rect1.collidepoint(self.game.mpos[0], self.game.mpos[1]):
 
-            else:
-                self.assets['player_name']['left'].set_frame(11)
+                if pygame.mouse.get_pressed()[0]:
+                    self.assets['player_name']['left'].set_frame(20)
+                    self.read = True
 
-        else:
-            self.assets['player_name']['left'].set_frame(0)
-
-        if self.assets['player_name']['right'].get_frame() == 21:
-            pass
-
-        elif self.name_rect2.collidepoint(self.game.mpos[0], self.game.mpos[1]):
-
-            if pygame.mouse.get_pressed()[0]:
-                self.player_turn = 1
-                self.assets['player_name']['right'].set_frame(21)
-                self.read = True
+                else:
+                    self.assets['player_name']['left'].set_frame(10)
 
             else:
-                self.assets['player_name']['right'].set_frame(11)
+                self.assets['player_name']['left'].set_frame(0)
 
-        else:
-            self.assets['player_name']['right'].set_frame(0)
+            if self.assets['player_name']['right'].get_frame() in [20,30]:
+                pass
+
+            elif self.name_rect2.collidepoint(self.game.mpos[0], self.game.mpos[1]):
+
+                if pygame.mouse.get_pressed()[0]:
+                    self.player_turn = 1
+                    self.assets['player_name']['right'].set_frame(20)
+                    self.read = True
+
+                else:
+                    self.assets['player_name']['right'].set_frame(10)
+
+            else:
+                self.assets['player_name']['right'].set_frame(0)
 
     def render(self, surf):
 
@@ -173,3 +188,81 @@ class NameInput:
             return self.name1
         else:
             return self.name2
+        
+class GameOver:
+
+    def __init__(self, game, assets):
+
+        self.game = game
+        self.assets = {
+            'game_over' : assets['game_over'],
+            'winner' : assets['winner'],
+            'menu_button' : assets['menu_button'].copy(),
+        }
+
+        # play button rect
+        self.menu_button = pygame.Rect(124*4,134*4,74*4,29*4)
+        self.winner = pygame.Rect(82*4,103*4,150*4,15*4)
+
+    def update(self):
+        # check for button press
+        if self.menu_button.collidepoint(self.game.mpos[0], self.game.mpos[1]):
+
+            if pygame.mouse.get_pressed()[0]:
+                self.assets['menu_button'].set_frame(21)
+
+            elif self.assets['menu_button'].get_frame() == 21:
+                self.game.reset()
+                self.game.mode='menu'
+
+            else:
+                self.assets['menu_button'].set_frame(11)
+
+        else:
+            self.assets['menu_button'].set_frame(0)
+
+    def render(self, surf):
+        # blit game over
+        surf.blit(
+            pygame.transform.scale(
+                self.assets['game_over'],
+                (
+                    surf.get_width(),
+                    surf.get_height(),
+                )
+            ),
+            (0, 10*math.sin(pygame.time.get_ticks() / 240))
+        )
+
+        # blit the winner box
+        surf.blit(
+            pygame.transform.scale(
+                self.assets['winner'],
+                (
+                    surf.get_width(),
+                    surf.get_height(),
+                )
+            ),
+            (0, 0)
+        )
+
+        # blit the menu button
+        surf.blit(
+            pygame.transform.scale(
+                self.assets['menu_button'].img(),
+                (
+                    surf.get_width(),
+                    surf.get_height(),
+                )
+            ),
+            (0, 0)
+        )
+        
+        text = pygame.font.Font('assets/fonts/custom_font.ttf',size=60).render(self.game.winner, False, 'black')
+        surf.blit(
+            text,
+            (
+                self.winner.left + 20 + (self.winner.width - text.get_width()) / 2,
+                self.winner.top + 10,
+            )
+        )
