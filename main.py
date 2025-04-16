@@ -120,7 +120,7 @@ class game():
         self.display = pygame.Surface((1280,720))
 
         # mode dictates what is happening in game
-        self.mode = 'menu'
+        self.mode = 'card_unpack'
 
         # initializing clock
         self.clock = pygame.time.Clock()
