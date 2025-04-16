@@ -24,6 +24,13 @@ LAUNCHER_STRAP_MAP = {
     'stone' : (20,28),
 }
 
+BIRD_CENTER = {
+    'basic' : (12,12),
+    'glass' : (10,10),
+    'wood' : (12,12),
+    'stone' : (14,20),
+}
+
 class Bird:
 
     def __init__(self, game, map_size, type, origin = (0, 0), mode = 'idle', flip = False, stray = False):
@@ -121,6 +128,7 @@ class Bird:
         Return True if bird is operating
         '''
 
+
         stray_operating = False
         for strays in self.stray_projectiles:
             if strays.update():
@@ -162,7 +170,7 @@ class Bird:
                 self.animation = self.game.assets[self.anim_id][self.type]['in_air'].copy()
 
                 # set velocity proportional to displacement
-                self.v = (self.origin[0] - self.game.scaled_mpos[0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1])/5
+                self.v = (self.origin[0] - self.game.scaled_mpos[0] + BIRD_CENTER[self.type][0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1] + BIRD_CENTER[self.type][1])/5
                 modulus = abs(self.v)
                 # reset velocity modulus to asymptotically reach a maximum
                 self.v /= abs(self.v)
@@ -182,7 +190,7 @@ class Bird:
         present_offset = self.game.off_set
 
         if self.mode in ['aiming']:
-            v = (self.origin[0] - self.game.scaled_mpos[0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1])/5
+            v = (self.origin[0] - self.game.scaled_mpos[0] + BIRD_CENTER[self.type][0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1] + BIRD_CENTER[self.type][1])/5
             modulus = abs(v)
             v /= modulus
             v *= VMAX * (1-math.exp(-modulus))
