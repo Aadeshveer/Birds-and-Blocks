@@ -22,26 +22,26 @@ class Player:
             self.block_map = BlockMap(
                 self.game,
                 origin,
-                {
-                    (0,0) : 'stone',
-                    (2,0) : 'stone',
-                    (1,0) : 'stone',
-                    (0,1) : 'wood',
-                    (1,1) : 'wood',
-                    (2,1) : 'wood',
-                    (0,2) : 'glass',
-                    (1,2) : 'glass',
-                    (2,2) : 'glass',
-                    # (0,3) : 'stone',
-                    # (2,3) : 'stone',
-                    # (1,3) : 'stone',
-                    # (0,4) : 'wood',
-                    # (1,4) : 'wood',
-                    # (2,4) : 'wood',
-                    # (0,5) : 'glass',
-                    # (1,5) : 'glass',
-                    # (2,5) : 'glass',
-                }
+                # {
+                #     (0,0) : 'stone',
+                #     (2,0) : 'stone',
+                #     (1,0) : 'stone',
+                #     (0,1) : 'wood',
+                #     (1,1) : 'wood',
+                #     (2,1) : 'wood',
+                #     (0,2) : 'glass',
+                #     (1,2) : 'glass',
+                #     (2,2) : 'glass',
+                #     # (0,3) : 'stone',
+                #     # (2,3) : 'stone',
+                #     # (1,3) : 'stone',
+                #     # (0,4) : 'wood',
+                #     # (1,4) : 'wood',
+                #     # (2,4) : 'wood',
+                #     # (0,5) : 'glass',
+                #     # (1,5) : 'glass',
+                #     # (2,5) : 'glass',
+                # }
             )
         # initailize the player deck of cards
         self.deck = Deck(
@@ -57,6 +57,7 @@ class Player:
             ),
             'left' if self.identity==0 else 'right'
         )
+
 
 
     def render(self):

@@ -1,8 +1,22 @@
+import random
+
 HEALTH_MAP = {
     'glass' : 55,
     'wood' : 75,
     'stone' : 95,
 }
+
+BLOCK_INIT_LIST = [
+    'glass',
+    'glass',
+    'glass',
+    'stone',
+    'stone',
+    'stone',
+    'wood',
+    'wood',
+    'wood',
+]
 
 class BlockMap:
     
@@ -21,7 +35,20 @@ class BlockMap:
             for i in map:
         
                 self.add_block(i, map[i])
+            
+        else:
 
+            self.initialize_blocks()
+
+    def initialize_blocks(self):
+        block_init_list = BLOCK_INIT_LIST.copy()
+        for i in range(3):
+            for j in range(3):
+                choice = random.choice(block_init_list)
+                self.add_block((i,j), choice)
+                block_init_list.remove(choice)
+
+    
     def render(self, surf):
         '''
         Renders each block in block map

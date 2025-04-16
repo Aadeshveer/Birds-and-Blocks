@@ -17,6 +17,13 @@ DAMAGE_MAP = {
     'glass' : (20,2),
 }
 
+LAUNCHER_STRAP_MAP = {
+    'basic' : (14,22),
+    'glass' : (8,16),
+    'wood' : (14,22),
+    'stone' : (20,28),
+}
+
 class Bird:
 
     def __init__(self, game, map_size, type, origin = (0, 0), mode = 'idle', flip = False, stray = False):
@@ -174,10 +181,15 @@ class Bird:
         surf = self.game.display
         present_offset = self.game.off_set
 
+        if self.mode == 'ready' or self.mode == 'aiming':
+            self.strap_back(surf)
+
         surf.blit(self.animation.img(), self.pos)
         
         if self.mode == 'ready' or self.mode == 'aiming':
             expected_scaling = 2
+            self.strap_front(surf)
+
         
         elif not self.stray:
         
@@ -199,6 +211,7 @@ class Bird:
             self.game.off_set = expected_offset
 
             self.game.change_scaling(expected_scaling, 14)
+
 
     def collision_check(self):
         '''
@@ -257,3 +270,19 @@ class Bird:
         projectile.v = self.v + vel_offset
         projectile.power = False
         return projectile
+    
+    def strap_back(self, surf):
+        pygame.draw.polygon(surf, 'brown', [
+            (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][0]),
+            (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][1]),
+            (self.map_size[0]-308 if self.flip else 308, 572),
+            (self.map_size[0]-308 if self.flip else 308, 568),
+        ])
+
+    def strap_front(self, surf):
+        pygame.draw.polygon(surf, 'brown', [
+            (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][0]),
+            (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][1]),
+            (self.map_size[0]-284 if self.flip else 284, 572),
+            (self.map_size[0]-284 if self.flip else 284, 568),
+        ])
