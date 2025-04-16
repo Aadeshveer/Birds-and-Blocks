@@ -27,12 +27,15 @@ class Bird:
         self.pos = origin # original position is provided origin
         self.mode = mode
         self.flip = flip
+        self.stray = False
         self.v = 0 + 0j
         self.hit_shape = HIT_SHAPE_MAP[type] # Helps in forming a rectangle which if hits will cause damage to blocks
         self.anim_id = 'projectile_flipped' if flip else 'projectile' 
         self.animation = self.game.assets[self.anim_id][self.type]['idle'].copy()
         self.width = self.animation.img().get_width()
         self.height = self.animation.img().get_height()
+        self.stray_projectiles = []
+        self.damage_factor = 1
 
     def calculate_next_pos(self):
         '''
@@ -62,29 +65,33 @@ class Bird:
                             )
                             dist = math.dist(rel_loc, loc)
 
+                            self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','fast'], num=30 + 10*upgrade_index)
                             if dist < 3:
-                                self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','fast'], num=40)
-                                if (self.game.get_player_by_id(-1).block_map.block_map[block_loc].damage(30 * (1 - dist/3) * upgrade_index)):
+                                if (self.game.get_player_by_id(-1).block_map.block_map[block_loc].damage((10 + 30 * (1 - dist/3)) * upgrade_index)):
                                     # runs if block is destroyed
                                     self.game.get_player_by_id(-1).block_map.block_map.pop(block_loc)
                                     # run broken bird shard animation
                                     self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(-1).block_map.loc_to_pos(block_loc), effects=['gravity', 'sequence', 'radial'])
                         
                         pos[0] += self.map_size[0]
-                        
 
                     case 'glass':
-                        # TODO: implement multiply
-                        pass
+                        self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=10)
+                        self.stray_projectiles.append(self.make_stray_projectile(2j))
+                        self.stray_projectiles.append(self.make_stray_projectile(-2j))
+                        self.damage_factor /= 2
 
                     case 'basic':
-                        DAMAGE_MAP[self.type] *= 3
+                        self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=10)
+                        self.damage_factor *= 3
 
                 self.power = False
         if not self.power:
             match self.type:
                 case 'wood':
                     self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','truncated'], num=1)
+                case 'basic':
+                    self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=1)
 
         pos[0] += self.v.real
         pos[1] += self.v.imag
@@ -107,10 +114,15 @@ class Bird:
         Return True if bird is operating
         '''
 
+        stray_operating = False
+        for strays in self.stray_projectiles:
+            if strays.update():
+                stray_operating = True
+
         self.animation.update()
 
         if self.mode == 'in_air':
-            return self.calculate_next_pos()
+            return self.calculate_next_pos() or stray_operating
 
         if self.mode == 'ready':
             if (
@@ -156,6 +168,9 @@ class Bird:
         '''
         Renders bird on surf and returns a scaling factor for better effect
         '''
+        for stray in self.stray_projectiles:
+            stray.render()
+
         surf = self.game.display
         present_offset = self.game.off_set
 
@@ -164,36 +179,32 @@ class Bird:
         if self.mode == 'ready' or self.mode == 'aiming':
             expected_scaling = 2
         
-        else:
+        elif not self.stray:
         
             if self.flip:
                 expected_scaling = 1 + abs(surf.get_width() - self.pos[0]) / surf.get_width()
         
             else:
                 expected_scaling = 1 + abs(self.pos[0]) / surf.get_width()
-        
-        expected_offset = [
-            - self.pos[0] + surf.get_width() * expected_scaling / 4,
-            - self.pos[1] - surf.get_height() * expected_scaling / 4
-        ]
 
-        # smoothen the camera scroll
-        expected_offset[0] = (expected_offset[0] + 14 * present_offset[0]) / 15
-        expected_offset[1] = (expected_offset[1] + 14 * present_offset[1]) / 15
-        
-        self.game.off_set = expected_offset
+            expected_offset = [
+                - self.pos[0] + surf.get_width() * expected_scaling / 4,
+                - self.pos[1] - surf.get_height() * expected_scaling / 4
+            ]
 
-        self.game.change_scaling(expected_scaling, 14)
+            # smoothen the camera scroll
+            expected_offset[0] = (expected_offset[0] + 14 * present_offset[0]) / 15
+            expected_offset[1] = (expected_offset[1] + 14 * present_offset[1]) / 15
+            
+            self.game.off_set = expected_offset
+
+            self.game.change_scaling(expected_scaling, 14)
 
     def collision_check(self):
         '''
         Manages bird in air environment
         Returns if bird has collided
         '''
-
-        # load which player to collide with
-        playing = self.game.player_turn
-        to_hit = (playing + 1) % 2
 
         # origin of to hit player
         origin = self.game.get_player_by_id(-1).origin
@@ -228,6 +239,8 @@ class Bird:
                     # run broken bird shard animation
                     self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(-1).block_map.loc_to_pos(loc), effects=['gravity', 'sequence', 'radial'])
                 
+                self.pos = (0,self.map_size[1]) if self.flip else self.map_size
+
                 return True
         
         return False
@@ -236,5 +249,12 @@ class Bird:
         '''
         Returns damage of bird
         '''
-        return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v))
-        
+        return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)) * self.damage_factor
+    
+    def make_stray_projectile(self, vel_offset):
+        projectile = Bird(self.game, self.map_size, self.type, self.origin, self.mode, self.flip)
+        projectile.pos = self.pos
+        projectile.stray = True
+        projectile.v = self.v + vel_offset
+        projectile.power = False
+        return projectile

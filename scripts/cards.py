@@ -40,11 +40,11 @@ class Deck:
     def reload_cards(self):
 
         for card_type in self.cards_types:
-    
+
             self.cards.append(Card(self.game, card_type, self.map_size, self.origin, self.player))
-        
+
         for card in self.cards:
-        
+
             if self.player=='left':
                 self.rect_list.append(card.rect((0,CARD_UPPER_BUFFER)))
 
@@ -67,14 +67,14 @@ class Deck:
 
         if len(self.cards):
             variation = (self.map_size[0] / (1 if self.player == 'dealer' else 2) - CARD_WIDTH) / (len(self.cards) + 1)
-        
+
         for i in range(len(self.cards)):
-        
+
             x = variation * (i+1) + i * CARD_WIDTH
             x = (self.map_size[0] - x - CARD_WIDTH if self.player == 'right' else x)
-        
+
             y = CARD_UPPER_BUFFER
-        
+
             self.pos_list.append((x,y))
 
     def play_deck(self):
@@ -96,6 +96,9 @@ class Deck:
                 self.game.player_turn %= 2
                 if len(self.game.get_player_by_id().deck.cards) == 0:
                     self.game.mode = 'upgrade_unpack'
+                if len(self.game.upgrade_cards.cards) == 0:
+                    self.game.upgrade_cards.cards_types = ['upgrade_wood', 'upgrade_basic', 'upgrade_stone', 'upgrade_glass']
+                    self.game.upgrade_cards.reload_cards()
                 self.find_pos()
 
     def unpack(self):
@@ -107,12 +110,12 @@ class Deck:
             self.rect_list[i].left = (14*self.rect_list[i].left + pos[0]) / 15
             self.rect_list[i].top = (14*self.rect_list[i].top + pos[1]) / 15
             self.pack_ctr += 1
-        
+
         if self.pack_ctr >= 60:
             # reset pack_ctr
             self.pack_ctr = 0
             return True
-        
+
         else:
             return False
 
@@ -126,8 +129,8 @@ class Deck:
             if rect.collidepoint(self.game.scaled_mpos):
                 if pygame.mouse.get_pressed()[0]:
                     self.active = i
-        
-            
+
+
 
 class Card:
     def __init__(self, game, card_type, map_size, origin, player):
@@ -156,14 +159,14 @@ class Card:
 
             if pygame.mouse.get_pressed()[1]:
                 self.projectile.mode = 'ready'
-            
+
             if not self.projectile.update():
                 return False
-            
+
             self.projectile.render()
 
             return True
-        
+
         else:
             self.game.get_player_by_id().upgrades[self.type.split('_')[1]] += 1
             self.game.get_player_by_id().deck.cards_types = ['basic', 'wood', 'glass', 'stone']
@@ -174,6 +177,4 @@ class Card:
         '''
         Returns a rect in which the card lies
         '''
-        return pygame.rect.Rect(pos[0], pos[1], self.img.get_width(), self.img.get_height())
-
-        
+        return pygame.rect.Rect(pos[0], pos[1], self.img.get_width(), self.img.get_height())        

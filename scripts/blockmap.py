@@ -1,10 +1,9 @@
 import pygame
 
 HEALTH_MAP = {
-    'glass' : 55,
+    'glass' : 5,
     'wood' : 75,
     'stone' : 95,
-    'royal' : 1000,
 }
 
 class BlockMap:
