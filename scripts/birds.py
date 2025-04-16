@@ -181,6 +181,15 @@ class Bird:
         surf = self.game.display
         present_offset = self.game.off_set
 
+        if self.mode in ['aiming']:
+            v = (self.origin[0] - self.game.scaled_mpos[0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1])/5
+            modulus = abs(v)
+            v /= modulus
+            v *= VMAX * (1-math.exp(-modulus))
+            for i in range(0,25,6):
+                pygame.draw.circle(surf, 'white', (self.origin[0] + v.real*i,self.origin[1] + v.imag*i + 1/12 * i**2), (40-i)/4)
+
+
         if self.mode == 'ready' or self.mode == 'aiming':
             self.strap_back(surf)
 
