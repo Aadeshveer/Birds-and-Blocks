@@ -11,7 +11,7 @@ HIT_SHAPE_MAP = {
 }
 
 DAMAGE_MAP = {
-    'basic' : (20,2),
+    'basic' : (30,2),
     'wood' : (20,2),
     'stone' : (20,2),
     'glass' : (20,2),
@@ -19,7 +19,7 @@ DAMAGE_MAP = {
 
 class Bird:
 
-    def __init__(self, game, map_size, type, origin = (0, 0), mode = 'idle', flip = False):
+    def __init__(self, game, map_size, type, origin = (0, 0), mode = 'idle', flip = False, stray = False):
         self.game = game
         self.map_size = map_size
         self.type = type
@@ -27,11 +27,11 @@ class Bird:
         self.pos = origin # original position is provided origin
         self.mode = mode
         self.flip = flip
-        self.stray = False
+        self.stray = stray
         self.v = 0 + 0j
         self.hit_shape = HIT_SHAPE_MAP[type] # Helps in forming a rectangle which if hits will cause damage to blocks
         self.anim_id = 'projectile_flipped' if flip else 'projectile' 
-        self.animation = self.game.assets[self.anim_id][self.type]['idle'].copy()
+        self.animation = self.game.assets[self.anim_id][self.type]['in_air' if self.stray else 'idle'].copy()
         self.width = self.animation.img().get_width()
         self.height = self.animation.img().get_height()
         self.stray_projectiles = []
@@ -233,7 +233,7 @@ class Bird:
                 # adds magic dust effect
                 self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=5)
 
-                if block.damage(self.damage()):
+                if block.damage(self.damage(block.type)):
                     # runs if block is destroyed
                     self.game.get_player_by_id(-1).block_map.block_map.pop(loc)
                     # run broken bird shard animation
@@ -245,16 +245,15 @@ class Bird:
         
         return False
     
-    def damage(self):
+    def damage(self, block_type):
         '''
         Returns damage of bird
         '''
-        return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)) * self.damage_factor
+        return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)) * self.damage_factor * (1.5 if block_type==self.type else 0.7)
     
     def make_stray_projectile(self, vel_offset):
-        projectile = Bird(self.game, self.map_size, self.type, self.origin, self.mode, self.flip)
+        projectile = Bird(self.game, self.map_size, self.type, self.origin, self.mode, self.flip, True)
         projectile.pos = self.pos
-        projectile.stray = True
         projectile.v = self.v + vel_offset
         projectile.power = False
         return projectile

@@ -1,7 +1,5 @@
-import pygame
-
 HEALTH_MAP = {
-    'glass' : 5,
+    'glass' : 55,
     'wood' : 75,
     'stone' : 95,
 }
