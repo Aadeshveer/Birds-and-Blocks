@@ -6,17 +6,19 @@ class Menu:
         self.game = game
         self.assets = {
             'play_button' : assets['play_button'].copy(),
+            'tutorial_button' : assets['tutorial_button'].copy(),
             'title' : assets['title'],
         }
 
         # play button rect
         self.play_button = pygame.Rect(124*4,134*4,74*4,29*4)
+        self.tutorial_button = pygame.Rect(223*4,149*4,76*4,16*4)
 
     def update(self):
         # check for button press
         if self.play_button.collidepoint(self.game.mpos[0], self.game.mpos[1]):
 
-            if pygame.mouse.get_pressed(num_buttons=5)[0]:
+            if pygame.mouse.get_pressed()[0]:
                 self.assets['play_button'].set_frame(21)
 
             elif self.assets['play_button'].get_frame() == 21:
@@ -28,28 +30,36 @@ class Menu:
         else:
             self.assets['play_button'].set_frame(0)
 
+        if self.tutorial_button.collidepoint(self.game.mpos[0], self.game.mpos[1]):
+
+            if pygame.mouse.get_pressed()[0]:
+                self.assets['tutorial_button'].set_frame(21)
+
+            elif self.assets['tutorial_button'].get_frame() == 21:
+                self.game.tutorial=True
+
+            else:
+                self.assets['tutorial_button'].set_frame(11)
+
+        else:
+            self.assets['tutorial_button'].set_frame(0)
+
     def render(self, surf):
         # blit the title
         surf.blit(
-            pygame.transform.scale(
-                self.assets['title'],
-                (
-                    surf.get_width(),
-                    surf.get_height(),
-                )
-            ),
+            self.assets['title'],
             (0, 10*math.sin(pygame.time.get_ticks() / 240))
         )
 
         # blit the play button
         surf.blit(
-            pygame.transform.scale(
-                self.assets['play_button'].img(),
-                (
-                    surf.get_width(),
-                    surf.get_height(),
-                )
-            ),
+            self.assets['play_button'].img(),
+            (0, 0)
+        )
+
+        # blit the tut button
+        surf.blit(
+            self.assets['tutorial_button'].img(),
             (0, 0)
         )
 
@@ -146,23 +156,11 @@ class NameInput:
 
 
         surf.blit(
-            pygame.transform.scale(
-                self.assets['player_name']['left'].img(),
-                (
-                    surf.get_width(),
-                    surf.get_height(),
-                )
-            ),
+            self.assets['player_name']['left'].img(),
             (0, 0)
         )
         surf.blit(
-            pygame.transform.scale(
-                self.assets['player_name']['right'].img(),
-                (
-                    surf.get_width(),
-                    surf.get_height(),
-                )
-            ),
+            self.assets['player_name']['right'].img(),
             (0, 0)
         )
 
@@ -224,37 +222,19 @@ class GameOver:
     def render(self, surf):
         # blit game over
         surf.blit(
-            pygame.transform.scale(
-                self.assets['game_over'],
-                (
-                    surf.get_width(),
-                    surf.get_height(),
-                )
-            ),
+            self.assets['game_over'],
             (0, 10*math.sin(pygame.time.get_ticks() / 240))
         )
 
         # blit the winner box
         surf.blit(
-            pygame.transform.scale(
-                self.assets['winner'],
-                (
-                    surf.get_width(),
-                    surf.get_height(),
-                )
-            ),
+            self.assets['winner'],
             (0, 0)
         )
 
         # blit the menu button
         surf.blit(
-            pygame.transform.scale(
-                self.assets['menu_button'].img(),
-                (
-                    surf.get_width(),
-                    surf.get_height(),
-                )
-            ),
+            self.assets['menu_button'].img(),
             (0, 0)
         )
         
@@ -265,4 +245,70 @@ class GameOver:
                 self.winner.left + 20 + (self.winner.width - text.get_width()) / 2,
                 self.winner.top + 10,
             )
+        )
+
+class Tutorial:
+    def __init__(self, game, assets):
+        self.game = game
+        self.anim = assets['tutorial'].copy()
+        self.selection = False
+        self.upgradation = True
+        self.cong_ctr = 0
+        self.final_ctr = 0
+
+    def update(self):
+        match self.game.mode:
+            case 'menu':
+                self.frame = 0
+
+            case 'name_input':
+                self.frame = 10
+
+            case 'card_unpack':
+                self.frame = 50
+
+            case 'card_select':
+                deck = self.game.get_player_by_id().deck
+                if deck.active != None and not self.selection:
+                    match deck.cards[deck.active].projectile.mode:
+                        case 'ready':
+                            self.frame = 30 if self.upgradation else 80
+                        case 'aiming':
+                            self.frame = 40 if self.upgradation else 80
+                        case 'in_air':
+                            self.frame = 50
+                            self.selection = True
+                elif self.selection:
+                    self.cong_ctr += 1
+                    self.frame = 50
+                else:
+                    self.frame = 20
+
+            case 'upgrade_unpack':
+                self.frame = 70
+
+            case 'upgrade':
+                deck = self.game.get_player_by_id().deck
+                if self.upgradation:
+                    self.upgradation = False
+                    self.selection = False
+                    self.frame = 70
+                elif self.frame == 70:
+                    pass
+                else:
+                    self.frame = 50
+
+            case 'game_over':
+                self.frame = 90
+
+        if 0 < self.cong_ctr < 120:
+            self.frame = 60
+            self.cong_ctr += 1
+
+        self.anim.set_frame(self.frame)
+
+    def render(self,surf):
+        surf.blit(
+            self.anim.img(),
+            (0, 0),
         )

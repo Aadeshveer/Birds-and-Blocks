@@ -3,27 +3,32 @@ import os
 
 BASE_IMG_PATH = './assets/images'
 
-def load_image(path):
+def load_image(path, scaling = None, alpha = False):
     '''
     Loads and returns a pygame image
     '''
-    img = pygame.image.load(BASE_IMG_PATH + '/' + path).convert()
+    if alpha:
+        img = pygame.image.load(BASE_IMG_PATH + '/' + path).convert_alpha()
+    else:
+        img = pygame.image.load(BASE_IMG_PATH + '/' + path).convert()
+    if scaling != None:
+        img = pygame.transform.scale(img, scaling)
     img.set_colorkey((0, 0, 0))
     return img
 
-def load_images(path, flip = False):
+def load_images(path, flip = False, scaling = None, alpha = False):
     '''
     Loads and returns an array of pygame images present in that dir
     I flip is true mirrors the image
     '''
     images = []
     for img_name in sorted(os.listdir(BASE_IMG_PATH + '/' + path)):
-        images.append(pygame.transform.flip(load_image(path + '/' + img_name), flip, False))
+        images.append(pygame.transform.flip(load_image(path + '/' + img_name, scaling, alpha), flip, False))
     return images
 
 class Animation:
     '''
-    Helps in managin multi image animations
+    Helps in managing multi image animations
     '''
     def __init__(self, images, img_dur = 5, loop = True):
         self.images = images
@@ -52,7 +57,7 @@ class Animation:
             self.frame += 1
             if self.frame >= len(self.images) * self.img_dur:
                 self.done = True
-        
+
         return self.done
 
     def set_frame(self, frame):
@@ -74,4 +79,3 @@ class Animation:
         Returns the present frame image for rendering
         '''
         return self.images[int(self.frame / self.img_dur)]
-    
