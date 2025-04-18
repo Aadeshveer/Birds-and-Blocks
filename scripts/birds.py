@@ -140,6 +140,7 @@ class Bird:
             return self.calculate_next_pos() or stray_operating
 
         if self.mode == 'ready':
+            pygame.draw.circle(self.game.display, 'red', (self.origin[0] + 16, self.origin[1] + 16), 30)
             if (
                 pygame.mouse.get_pressed()[0]
                 and
@@ -189,20 +190,21 @@ class Bird:
         surf = self.game.display
         present_offset = self.game.off_set
 
-        if self.mode in ['aiming']:
-            v = (self.origin[0] - self.game.scaled_mpos[0] + BIRD_CENTER[self.type][0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1] + BIRD_CENTER[self.type][1])/5
-            modulus = abs(v)
-            v /= modulus
-            v *= VMAX * (1-math.exp(-modulus))
-            for i in range(0,25,6):
-                pygame.draw.circle(surf, 'white', (self.origin[0] + v.real*i,self.origin[1] + v.imag*i + 1/12 * i**2), (40-i)/4)
-
-
         if self.mode == 'ready' or self.mode == 'aiming':
             self.strap_back(surf)
 
         surf.blit(self.animation.img(), self.pos)
         
+
+        if self.mode in ['aiming']:
+            v = (self.origin[0] - self.game.scaled_mpos[0] + BIRD_CENTER[self.type][0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1] + BIRD_CENTER[self.type][1])/5
+            modulus = abs(v)
+            v /= modulus
+            v *= VMAX * (1-math.exp(-modulus))
+            for i in range(1, 30, 4):
+                pygame.draw.circle(surf, 'white', (self.origin[0] + v.real*i,self.origin[1] + v.imag*i + 1/12 * i**2), 2 + ( 30 - i ) / 4)
+
+
         if self.mode == 'ready' or self.mode == 'aiming':
             expected_scaling = 2
             self.strap_front(surf)

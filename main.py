@@ -1,11 +1,13 @@
 import pygame as pygame
 
-from scripts.modes import Menu, NameInput, GameOver
+from scripts.modes import Menu, NameInput, GameOver, Tutorial
 from scripts.player import Player
 from scripts.cards import Deck
 from scripts.utils import load_image, load_images, Animation
 from scripts.particles import Particles
 
+
+SIZE = (1280,720)
 PLAY_MODES = ['card_unpack', 'card_select', 'upgrade_unpack', 'upgrade']
 
 class game():
@@ -20,12 +22,12 @@ class game():
         pygame.display.set_caption('Birds and Blocks')
 
         # window will be the main window to be displayed on scree
-        self.window = pygame.display.set_mode((1280,720))
+        self.window = pygame.display.set_mode(SIZE)
 
 
         # loading all the assets to prevent lag once game has started
         self.assets = {
-            'background' : load_images('background'),
+            'background' : load_images('background',scaling=SIZE),
             'launcher' : load_images('projectile_shooter'),
             'launcher_flipped' : load_images('projectile_shooter', flip = True),
             'projectile' : {
@@ -98,21 +100,22 @@ class game():
                 'stone' : Animation(load_images('effects/shards/stone'), img_dur=10),
             },
             'UI' : {
-                'title' : load_image('UI/menu/title.png'),
-                'play_button' : Animation(load_images('UI/menu/play_button'), img_dur=10),
-                'game_over' : load_image('UI/game_over/game_over.png'),
-                'winner' : load_image('UI/game_over/winner_box.png'),
-                'menu_button' : Animation(load_images('UI/game_over/menu_button'), img_dur=10),
+                'title' : load_image('UI/menu/title.png', scaling=SIZE),
+                'play_button' : Animation(load_images('UI/menu/play_button', scaling=SIZE), img_dur=10),
+                'tutorial_button' : Animation(load_images('UI/menu/tutorial_button', scaling=SIZE), img_dur=10),
+                'game_over' : load_image('UI/game_over/game_over.png', scaling=SIZE),
+                'winner' : load_image('UI/game_over/winner_box.png', scaling=SIZE),
+                'menu_button' : Animation(load_images('UI/game_over/menu_button', scaling=SIZE), img_dur=10),
                 'player_name' : {
-                    'left' : Animation(load_images('UI/player_name/1'), img_dur=10),
-                    'right' : Animation(load_images('UI/player_name/2'), img_dur=10),
+                    'left' : Animation(load_images('UI/player_name/1', scaling=SIZE), img_dur=10),
+                    'right' : Animation(load_images('UI/player_name/2', scaling=SIZE), img_dur=10),
                 },
+                'tutorial' : Animation(load_images('UI/tutorial', scaling=SIZE, alpha=True), img_dur=10)
             },
         }
 
         self.fonts = {
             'monospace' : pygame.font.Font('assets/fonts/custom_font.ttf'),
-            'default' : pygame.font.Font('assets/fonts/Baskic8.otf'),
         }
 
 
@@ -158,6 +161,8 @@ class game():
             'dealer',
         )
 
+        self.tutorial = False
+
         self.menu = Menu(self, self.assets['UI'])
 
         self.game_over = GameOver(self, self.assets['UI'])
@@ -165,6 +170,8 @@ class game():
         self.winner = 'None'
 
         self.name_handler = NameInput(self, self.assets['UI'])
+
+        self.tut = Tutorial(self, self.assets['UI'])
 
         self.particles.reset()
 
@@ -270,12 +277,7 @@ class game():
 
             # blits the background mountains/scene
             self.display.blit(
-                pygame.transform.scale(self.assets['background'][0],
-                    (
-                        self.display.get_width(),
-                        self.display.get_height()
-                    )
-                ),
+                self.assets['background'][0],
                 (0, 0)
             )
 
@@ -359,17 +361,13 @@ class game():
 
             # blits the foreground grass and foundations
             self.display.blit(
-                    pygame.transform.scale(self.assets['background'][1],
-                        (
-                            self.display.get_width(),
-                            self.display.get_height()
-                        )
-                    ),
+                    self.assets['background'][1],
                     (0, 0)
                 )
 
 
             # blits the scrolled and scaled display on window
+
             self.window.blit(
                 pygame.transform.scale(
                     self.display,
@@ -395,6 +393,9 @@ class game():
                 self.game_over.update()
                 self.game_over.render(self.window)
 
+            if self.tutorial:
+                self.tut.update()
+                self.tut.render(self.window)
 
             # updates window
             pygame.display.update()
