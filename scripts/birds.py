@@ -270,6 +270,8 @@ class Bird:
                 # adds magic dust effect
                 self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=5)
 
+                self.game.audio['hit'].play()
+
                 if block.damage(self.damage(block.type)):
                     self.game.audio[block.type + '_break'].play()
                     # runs if block is destroyed
