@@ -74,9 +74,6 @@ class Player:
                 if self.deck.unpack():
                     self.game.mode = 'card_select'
 
-                else:
-                    self.deck.render(sway=False)
-
             if self.game.mode in ['card_select', 'play', 'in_air']:
 
                 if self.deck.active == None:

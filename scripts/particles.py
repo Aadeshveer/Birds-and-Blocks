@@ -1,5 +1,6 @@
 import random
 import math
+import pygame
 
 class Particles:
     '''
@@ -22,12 +23,12 @@ class Particles:
             gravity: adds gravity to motion of particle
             truncated: removes few inital frames
             fast: launches the particle at high speed
+            cloud: drifts the particle right slowly
         '''
         
         if num == None:
         
             num = self.assets[type].length
-        
         for i in range(num):
         
             self.particles.append(
@@ -83,18 +84,21 @@ class Particle:
         
         if idx != None:
             self.anim.set_frame(10*idx)
-        
+
         elif 'truncated' in self.effects:
             self.anim.set_frame(8)
         else:
             self.anim.set_frame(30*int(random.random()))
         
+        if 'cloud' in self.effects:
+            self.anim.set_frame(10 * math.floor(self.anim.length * random.random() - 0.001))
+
         self.type = type
 
         self.pos = list(pos)
         
-        self.vx = vx * (10 if 'fast' in self.effects else 1)
-        self.vy = vy * (10 if 'fast' in self.effects else 1)
+        self.vx = (- 0.2 - random.random() / 5) if 'cloud' in self.effects else vx * (10 if 'fast' in self.effects else 1)
+        self.vy = 0 if 'cloud' in self.effects else vy * (10 if 'fast' in self.effects else 1)
         
         if 'radial' in self.effects:
             # gives speed itself in radial case
@@ -121,7 +125,14 @@ class Particle:
                 self.vy += 0.2 
 
         if 'sequence' in self.effects:
-            return not ((0 < self.pos[0] < self.window_size[0]) and (0 < self.pos[1] < self.window_size[1]))
+            if (-self.anim.img().get_width() < self.pos[0]):
+                return False
+            else:
+                if 'cloud' in self.effects:
+                    self.pos[0] = self.window_size[0]
+                    self.pos[1] = self.window_size[1] * random.random() * 0.6
+                    return False
+                return True
         
         else:
             return self.anim.update()

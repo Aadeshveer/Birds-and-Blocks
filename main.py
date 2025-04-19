@@ -1,4 +1,5 @@
 import pygame as pygame
+import random
 
 from scripts.modes import Menu, NameInput, GameOver, Tutorial
 from scripts.player import Player
@@ -99,6 +100,7 @@ class game():
                 'wood' : Animation(load_images('effects/shards/wood'), img_dur=10),
                 'stone' : Animation(load_images('effects/shards/stone'), img_dur=10),
             },
+            'clouds' : Animation(load_images('clouds', scaling=(160,64)), img_dur=10),
             'UI' : {
                 'title' : load_image('UI/menu/title.png', scaling=SIZE),
                 'play_button' : Animation(load_images('UI/menu/play_button', scaling=SIZE), img_dur=10),
@@ -145,6 +147,10 @@ class game():
             'particle' : self.assets['effects']['particle'],
         })
 
+        self.clouds = Particles(self.window.get_size(),{
+            'clouds' : self.assets['clouds']
+        })
+
         # resets parts of game required for new game
         self.reset()
 
@@ -175,6 +181,8 @@ class game():
 
         self.particles.reset()
 
+        self.clouds.reset()
+
         # scales the display to window for zoom effect
         self.scaling_factor = 1
 
@@ -193,6 +201,9 @@ class game():
 
         # maintain a single mpos variable that will be passed to other functions
         self.mpos = (0, 0)
+
+        for _ in range(15):
+            self.clouds.add_particles('clouds', (-160 + random.random() * self.window.get_width(), self.window.get_width() * random.random() * 0.6), ['cloud','sequence'],1)
 
     def run(self):
 
@@ -274,6 +285,8 @@ class game():
                 self.winner = self.name_handler.get_name(0)
                 self.mode = 'game_over'
             
+            self.clouds.render(self.display)
+            self.clouds.update()
 
             # blits the background mountains/scene
             self.display.blit(
@@ -402,6 +415,7 @@ class game():
 
             # set fps to 60
             self.clock.tick(60)
+
 
     def change_scaling(self, expected_scaling, ratio):
         '''
