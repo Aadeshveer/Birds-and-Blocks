@@ -1,9 +1,9 @@
 import random
 
 HEALTH_MAP = {
-    'glass' : 5,
-    'wood' : 7,
-    'stone' : 9,
+    'glass' : 55,
+    'wood' : 75,
+    'stone' : 95,
 }
 
 BLOCK_INIT_LIST = [
