@@ -131,6 +131,7 @@ class game():
             'button' : load_sound('button'),
             'upgrade' : load_sound('upgrade'),
             'bomb' : load_sound('bomb'),
+            'hit' : load_sound('hit'),
         }
 
         self.fonts = {
