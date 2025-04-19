@@ -140,7 +140,8 @@ class Bird:
             return self.calculate_next_pos() or stray_operating
 
         if self.mode == 'ready':
-            pygame.draw.circle(self.game.display, 'red', (self.origin[0] + 16, self.origin[1] + 16), 30)
+            if self.game.tutorial:
+                pygame.draw.circle(self.game.display, 'red', (self.origin[0] + 16, self.origin[1] + 16), 30)
             if (
                 pygame.mouse.get_pressed()[0]
                 and

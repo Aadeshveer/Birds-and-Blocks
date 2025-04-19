@@ -105,13 +105,14 @@ class Deck:
         '''
         Updates the position of cards for smooth unpacking
         '''
+        self.render()
         for i,pos in enumerate(self.pos_list):
 
             self.rect_list[i].left = (14*self.rect_list[i].left + pos[0]) / 15
             self.rect_list[i].top = (14*self.rect_list[i].top + pos[1]) / 15
             self.pack_ctr += 1
 
-        if self.pack_ctr >= 60:
+        if self.pack_ctr >= (120 if self.player == 'dealer' else 60):
             # reset pack_ctr
             self.pack_ctr = 0
             return True
