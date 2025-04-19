@@ -172,6 +172,7 @@ class Card:
             self.game.get_player_by_id().upgrades[self.type.split('_')[1]] += 1
             self.game.get_player_by_id().deck.cards_types = ['basic', 'wood', 'glass', 'stone']
             self.game.get_player_by_id().deck.reload_cards()
+            self.game.audio['upgrade'].play()
             return False
 
     def rect(self, pos):

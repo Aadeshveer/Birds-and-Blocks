@@ -2,6 +2,12 @@ import pygame
 import os
 
 BASE_IMG_PATH = './assets/images'
+BASE_SOUND_PATH = './assets/audio'
+
+def load_sound(path, volume = 10):
+    sound = pygame.Sound(BASE_SOUND_PATH + '/' + path + '.wav')
+    sound.set_volume(volume)
+    return sound
 
 def load_image(path, scaling = None, alpha = False):
     '''

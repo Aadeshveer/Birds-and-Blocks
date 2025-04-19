@@ -4,7 +4,7 @@ import random
 from scripts.modes import Menu, NameInput, GameOver, Tutorial
 from scripts.player import Player
 from scripts.cards import Deck
-from scripts.utils import load_image, load_images, Animation
+from scripts.utils import load_image, load_images, Animation, load_sound
 from scripts.particles import Particles
 
 
@@ -25,6 +25,8 @@ class game():
         # window will be the main window to be displayed on scree
         self.window = pygame.display.set_mode(SIZE)
 
+        pygame.mixer.music.load('./assets/audio/game_loop.wav')
+        pygame.mixer.music.play(-1)
 
         # loading all the assets to prevent lag once game has started
         self.assets = {
@@ -105,6 +107,7 @@ class game():
                 'title' : load_image('UI/menu/title.png', scaling=SIZE),
                 'play_button' : Animation(load_images('UI/menu/play_button', scaling=SIZE), img_dur=10),
                 'tutorial_button' : Animation(load_images('UI/menu/tutorial_button', scaling=SIZE), img_dur=10),
+                'credits_button' : Animation(load_images('UI/menu/credits_button', scaling=SIZE), img_dur=10),
                 'game_over' : load_image('UI/game_over/game_over.png', scaling=SIZE),
                 'winner' : load_image('UI/game_over/winner_box.png', scaling=SIZE),
                 'menu_button' : Animation(load_images('UI/game_over/menu_button', scaling=SIZE), img_dur=10),
@@ -112,8 +115,22 @@ class game():
                     'left' : Animation(load_images('UI/player_name/1', scaling=SIZE), img_dur=10),
                     'right' : Animation(load_images('UI/player_name/2', scaling=SIZE), img_dur=10),
                 },
-                'tutorial' : Animation(load_images('UI/tutorial', scaling=SIZE, alpha=True), img_dur=10)
+                'tutorial' : Animation(load_images('UI/tutorial', scaling=SIZE, alpha=True), img_dur=10),
+                'credits' : Animation(load_images('UI/credits', scaling=SIZE, alpha=True), img_dur=10)
             },
+        }
+
+        self.audio = {
+            'glass_break' : load_sound('glass_break'),
+            'stone_break' : load_sound('stone_break'),
+            'wood_break' : load_sound('wood_break'),
+            'glass_yell' : load_sound('glass_yell'),
+            'basic_yell' : load_sound('basic_yell'),
+            'wood_yell' : load_sound('wood_yell'),
+            'stone_yell' : load_sound('stone_yell'),
+            'button' : load_sound('button'),
+            'upgrade' : load_sound('upgrade'),
+            'bomb' : load_sound('bomb'),
         }
 
         self.fonts = {
@@ -169,6 +186,8 @@ class game():
 
         self.tutorial = False
 
+        self.credits = False
+
         self.menu = Menu(self, self.assets['UI'])
 
         self.game_over = GameOver(self, self.assets['UI'])
@@ -187,7 +206,7 @@ class game():
         self.scaling_factor = 1
 
         # moves the window for scroll effet
-        self.off_set = [0, 0]
+        self.off_set = [self.window.get_width() / 4, self.window.get_height() / 4]
 
         # allow user scrolling
         self.scrolling = True
