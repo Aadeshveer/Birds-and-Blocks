@@ -219,7 +219,7 @@ class NameInput:
             (0, 0)
         )
 
-        text1 = self.fonts['monospace'].render(self.name1[:17], False, 'black')
+        text1 = self.fonts['monospace'].render(self.name1[:12]+self.game.rating_handler.get_rating_str(self.name1), False, 'black')
         surf.blit(
             text1,
             (
@@ -227,7 +227,7 @@ class NameInput:
                 self.name_rect1.top + 10,
             )
         )
-        text2 = self.fonts['monospace'].render(self.name2[:17], False, 'black')
+        text2 = self.fonts['monospace'].render(self.name2[:12]+self.game.rating_handler.get_rating_str(self.name2), False, 'black')
         surf.blit(
             text2,
             (
@@ -404,7 +404,7 @@ class Tutorial:
                     self.cong_ctr += 1
                     self.frame = 50
                 else:
-                    self.frame = 20
+                    self.frame = 20 if self.game.player_turn == 0 else 110
 
             case 'upgrade_unpack':
                 self.frame = 70
@@ -427,7 +427,6 @@ class Tutorial:
             self.frame = 60
             self.cong_ctr += 1
 
-        print(self.frame, self.new)
         self.anim.set_frame(self.frame)
 
     def render(self,surf):

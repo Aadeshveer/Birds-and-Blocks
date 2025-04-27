@@ -51,7 +51,7 @@ class Player:
                 self.game.display.get_width(),
                 self.game.display.get_height()
             ),
-            ['glass'],# 'basic', 'stone', 'wood',],
+            ['glass', 'basic', 'stone', 'wood',],
             (
                 origin[0] + ((self.block_map.tile_size[0] * 3 + 60) if self.identity == 0 else -92),
                 origin[1] - 60
