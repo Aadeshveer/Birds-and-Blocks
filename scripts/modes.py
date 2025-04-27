@@ -1,6 +1,68 @@
 import pygame
 import math
 
+class Button:
+    def __init__(self, game, asset, pos, size, function, frame_offset = 0):
+        self.rect = pygame.Rect(*pos, *size)
+        self.game = game
+        self.asset = asset
+        self.function = function
+        self.clicked = False
+        self.frame_offset = frame_offset
+
+
+    def update(self):
+        if self.rect.collidepoint(self.game.mpos[0], self.game.mpos[1]):
+
+            if pygame.mouse.get_pressed()[0]:
+                self.asset.set_frame(self.frame_offset + 21)
+                if not self.clicked:
+                    if not self.game.mute:
+                        self.game.audio['button'].play()
+                        self.clicked = True
+
+            elif self.asset.get_frame() == self.frame_offset + 21:
+                self.asset.set_frame(self.frame_offset + 11)
+                self.clicked = False
+                self.function()
+
+            else:
+                self.asset.set_frame(self.frame_offset + 11)
+
+        else:
+            self.asset.set_frame(self.frame_offset)
+
+    def render(self, surf):
+        surf.blit(
+            self.asset.img(),
+            (0, 0)
+        )
+    
+    def change_offset(self, offset):
+        self.frame_offset = offset
+
+class UtilitiesButtons:
+    def __init__(self, game, assets):
+        self.game = game
+        self.mute = Button(self.game, assets['mute_button'].copy(), (35*4, 13*4), (16*4,16*4), self.switch_audio, 0)
+        self.back = Button(self.game, assets['back_button'].copy(), (13*4, 13*4), (16*4,16*4), self.restart)
+
+    def switch_audio(self):
+        self.game.mute = not self.game.mute
+        self.game.playing = False
+        self.mute.change_offset(30 if self.game.mute else 0)
+    def restart(self):
+        self.game.mode='menu'
+        self.game.reset()
+    
+    def update(self):
+        self.mute.update()
+        self.back.update()
+
+    def render(self, surf):
+        self.mute.render(surf)
+        self.back.render(surf)
+
 class Menu:
     def __init__(self, game, assets):
         self.game = game
@@ -11,71 +73,25 @@ class Menu:
             'title' : assets['title'],
         }
 
-        # play button rect
-        self.play_button = pygame.Rect(124*4,134*4,74*4,29*4)
-        self.tutorial_button = pygame.Rect(223*4,149*4,76*4,16*4)
-        self.credits_button = pygame.Rect(24*4,149*4,76*4,16*4)
+        self.play_button = Button(self.game, self.assets['play_button'], (124*4, 134*4), (74*4, 29*4), self.change_mode_to_input)
+        self.tutorial_button = Button(self.game, self.assets['tutorial_button'], (223*4,149*4), (76*4,16*4), self.activate_tutorial)
+        self.credits_button = Button(self.game, self.assets['credits_button'], (24*4, 149*4), (76*4, 16*4), self.activate_credits)
 
-        self.play_clicked = False
-        self.tutorials_clicked = False
-        self.credits_clicked = False
+    def change_mode_to_input(self):
+        self.game.mode='name_input'
+    def activate_tutorial(self):
+        self.game.tutorial=True
+    def activate_credits(self):
+        self.game.mode = 'game_over'
+        self.game.credits = True
 
     def update(self):
         # check for button press
-        if self.play_button.collidepoint(self.game.mpos[0], self.game.mpos[1]):
+        self.play_button.update()
 
-            if pygame.mouse.get_pressed()[0]:
-                self.assets['play_button'].set_frame(21)
-                if not self.play_clicked:
-                    self.game.audio['button'].play()
-                    self.play_clicked = True
+        self.tutorial_button.update()
 
-            elif self.assets['play_button'].get_frame() == 21:
-                self.game.mode='name_input'
-
-            else:
-                self.assets['play_button'].set_frame(11)
-
-        else:
-            self.assets['play_button'].set_frame(0)
-
-        if self.tutorial_button.collidepoint(self.game.mpos[0], self.game.mpos[1]):
-
-            if pygame.mouse.get_pressed()[0]:
-                self.assets['tutorial_button'].set_frame(21)
-                if not self.tutorials_clicked:
-                    self.game.audio['button'].play()
-                    self.tutorials_clicked = True
-
-
-            elif self.assets['tutorial_button'].get_frame() == 21:
-                self.game.tutorial=True
-
-            else:
-                self.assets['tutorial_button'].set_frame(11)
-
-        else:
-            self.assets['tutorial_button'].set_frame(0)
-
-        if self.credits_button.collidepoint(self.game.mpos[0], self.game.mpos[1]):
-
-            if pygame.mouse.get_pressed()[0]:
-                self.assets['credits_button'].set_frame(21)
-                if not self.credits_clicked:
-                    self.game.audio['button'].play()
-                    self.credits_clicked = True
-
-
-
-            elif self.assets['credits_button'].get_frame() == 21:
-                self.game.mode = 'game_over'
-                self.game.credits = True
-
-            else:
-                self.assets['credits_button'].set_frame(11)
-
-        else:
-            self.assets['credits_button'].set_frame(0)
+        self.credits_button.update()
 
     def render(self, surf):
         # blit the title
@@ -85,22 +101,13 @@ class Menu:
         )
 
         # blit the play button
-        surf.blit(
-            self.assets['play_button'].img(),
-            (0, 0)
-        )
+        self.play_button.render(surf)
 
         # blit the tut button
-        surf.blit(
-            self.assets['tutorial_button'].img(),
-            (0, 0)
-        )
+        self.tutorial_button.render(surf)
 
         # blit the credits button
-        surf.blit(
-            self.assets['credits_button'].img(),
-            (0, 0)
-        )
+        self.credits_button.render(surf)
 
 
 
@@ -172,7 +179,8 @@ class NameInput:
 
                 if pygame.mouse.get_pressed()[0]:
                     self.assets['player_name']['left'].set_frame(20)
-                    self.game.audio['button'].play()
+                    if not self.game.mute:
+                        self.game.audio['button'].play()
                     self.read = True
 
                 else:
@@ -189,7 +197,8 @@ class NameInput:
                 if pygame.mouse.get_pressed()[0]:
                     self.player_turn = 1
                     self.assets['player_name']['right'].set_frame(20)
-                    self.game.audio['button'].play()
+                    if not self.game.mute:
+                        self.game.audio['button'].play()
                     self.read = True
 
                 else:
@@ -267,7 +276,8 @@ class GameOver:
                     self.assets['menu_button'].set_frame(21)
 
             elif self.assets['menu_button'].get_frame() == 21 or self.assets['credits'].get_frame() == 21:
-                self.game.audio['button'].play()
+                if not self.game.mute:
+                    self.game.audio['button'].play()
                 self.game.mode='menu'
                 self.game.reset()
 
@@ -323,7 +333,7 @@ class GameOver:
                     self.loser_name.top + 5,
                 )
             )
-            winner_rating_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=20).render(f"{self.rating_win} (+{self.delta_win})", False, 'black')
+            winner_rating_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=38).render(f"{self.rating_win} (+{self.delta_win})", False, 'black')
             surf.blit(
                 winner_rating_text,
                 (
@@ -331,7 +341,7 @@ class GameOver:
                     self.winner_rating.top + 20,
                 )
             )
-            loser_rating_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=20).render(f"{self.rating_lose} ({self.delta_lose})", False, 'black')
+            loser_rating_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=38).render(f"{self.rating_lose} ({self.delta_lose})", False, 'black')
             surf.blit(
                 loser_rating_text,
                 (
