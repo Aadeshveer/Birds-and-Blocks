@@ -9,7 +9,7 @@ def load_sound(path, volume = 10):
     sound.set_volume(volume)
     return sound
 
-def load_image(path, scaling = None, alpha = False):
+def load_image(path, scaling = None, alpha = False, flip = False):
     '''
     Loads and returns a pygame image
     '''
@@ -20,7 +20,7 @@ def load_image(path, scaling = None, alpha = False):
     if scaling != None:
         img = pygame.transform.scale(img, scaling)
     img.set_colorkey((0, 0, 0))
-    return img
+    return pygame.transform.flip(img, flip, False)
 
 def load_images(path, flip = False, scaling = None, alpha = False):
     '''
@@ -29,7 +29,7 @@ def load_images(path, flip = False, scaling = None, alpha = False):
     '''
     images = []
     for img_name in sorted(os.listdir(BASE_IMG_PATH + '/' + path)):
-        images.append(pygame.transform.flip(load_image(path + '/' + img_name, scaling, alpha), flip, False))
+        images.append(load_image(path + '/' + img_name, scaling, alpha, flip))
     return images
 
 class Animation:

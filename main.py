@@ -40,21 +40,25 @@ class game():
                     'idle' : Animation(load_images('projectiles/basic/idle')),
                     'in_air' : Animation(load_images('projectiles/basic/in_air')),
                     'feather' : Animation(load_images('projectiles/basic/feather'), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/basic/upgrade/upgrade.png'),
                 },
                 'wood' : {
                     'idle' : Animation(load_images('projectiles/wood/idle')),
                     'in_air' : Animation(load_images('projectiles/wood/in_air')),
                     'feather' : Animation(load_images('projectiles/wood/feather'), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/wood/upgrade/upgrade.png'),
                 },
                 'stone' : {
                     'idle' : Animation(load_images('projectiles/stone/idle')),
                     'in_air' : Animation(load_images('projectiles/stone/in_air')),
                     'feather' : Animation(load_images('projectiles/stone/feather'), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/stone/upgrade/upgrade.png'),
                 },
                 'glass' : {
                     'idle' : Animation(load_images('projectiles/glass/idle')),
                     'in_air' : Animation(load_images('projectiles/glass/in_air')),
                     'feather' : Animation(load_images('projectiles/glass/feather'), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/glass/upgrade/upgrade.png'),
                 },
             },
             'projectile_flipped' : {
@@ -62,21 +66,25 @@ class game():
                     'idle' : Animation(load_images('projectiles/basic/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/basic/in_air', flip = True)),
                     'feather' : Animation(load_images('projectiles/basic/feather', flip = True), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/basic/upgrade/upgrade.png', flip=True),
                 },
                 'wood' : {
                     'idle' : Animation(load_images('projectiles/wood/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/wood/in_air', flip = True)),
                     'feather' : Animation(load_images('projectiles/wood/feather', flip = True), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/wood/upgrade/upgrade.png', flip=True),
                 },
                 'stone' : {
                     'idle' : Animation(load_images('projectiles/stone/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/stone/in_air', flip = True)),
                     'feather' : Animation(load_images('projectiles/stone/feather', flip = True), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/stone/upgrade/upgrade.png', flip=True),
                 },
                 'glass' : {
                     'idle' : Animation(load_images('projectiles/glass/idle', flip = True)),
                     'in_air' : Animation(load_images('projectiles/glass/in_air', flip = True)),
                     'feather' : Animation(load_images('projectiles/glass/feather', flip = True), img_dur=10, loop=False),
+                    'upgrade' : load_image('projectiles/glass/upgrade/upgrade.png', flip=True),
                 },
             },
             'cards' : {
@@ -122,6 +130,8 @@ class game():
                 },
                 'tutorial' : Animation(load_images('UI/tutorial', scaling=SIZE, alpha=True), img_dur=10),
                 'credits' : Animation(load_images('UI/credits', scaling=SIZE, alpha=True), img_dur=10),
+                'turn_display' : Animation(load_images('UI/turn_display', scaling=SIZE), img_dur=10),
+                'pygame' : load_image('UI/msc/pygame_logo-removebg.png', scaling=(200,80))
             },
         }
 
@@ -431,6 +441,15 @@ class game():
                 ),
                 self.off_set
             )
+
+            if self.mode in PLAY_MODES:
+                self.player1.render_upgrade_indicators(self.window)
+                self.player2.render_upgrade_indicators(self.window)
+                self.assets['UI']['turn_display'].set_frame(self.player_turn * 10)
+                self.window.blit(
+                    self.assets['UI']['turn_display'].img(),
+                    (0,0),
+                )
 
             if self.mode in PLAY_MODES + ['name_input']:
                 self.name_handler.render(self.window)

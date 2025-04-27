@@ -261,7 +261,20 @@ class Bird:
                         (- self.pos[1] + origin[1] - self.hit_shape[1] + j * self.hit_shape[2]) // self.game.get_player_by_id(-1).block_map.tile_size[1],
                     )
                 )
-        
+        if self.game.get_player_by_id().identity == 1:
+            rel_loc = [
+                rel_loc[1],
+                rel_loc[2],
+                rel_loc[0],
+                rel_loc[3],
+            ]
+        else:
+            rel_loc = [
+                rel_loc[0],
+                rel_loc[2],
+                rel_loc[1],
+                rel_loc[3],
+            ]
         for loc in rel_loc:
 
             if loc in self.game.get_player_by_id(-1).block_map.block_map: # there is a block placed at given location
