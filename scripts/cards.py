@@ -96,6 +96,9 @@ class Deck:
                 self.game.player_turn %= 2
                 if len(self.game.get_player_by_id().deck.cards) == 0:
                     self.game.mode = 'upgrade_unpack'
+                    if len(self.game.get_player_by_id(-1).deck.cards) == 0:
+                        self.game.player_turn += 1
+                        self.game.player_turn %= 2
                 if len(self.game.upgrade_cards.cards) == 0:
                     self.game.upgrade_cards.cards_types = ['upgrade_wood', 'upgrade_basic', 'upgrade_stone', 'upgrade_glass']
                     self.game.upgrade_cards.reload_cards()
@@ -172,7 +175,8 @@ class Card:
             self.game.get_player_by_id().upgrades[self.type.split('_')[1]] += 1
             self.game.get_player_by_id().deck.cards_types = ['basic', 'wood', 'glass', 'stone']
             self.game.get_player_by_id().deck.reload_cards()
-            self.game.audio['upgrade'].play()
+            if not self.game.mute:
+                self.game.audio['upgrade'].play()
             return False
 
     def rect(self, pos):

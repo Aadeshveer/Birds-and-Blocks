@@ -1,7 +1,7 @@
 import pygame as pygame
 import random
 
-from scripts.modes import Menu, NameInput, GameOver, Tutorial
+from scripts.modes import Menu, NameInput, GameOver, Tutorial, UtilitiesButtons
 from scripts.player import Player
 from scripts.cards import Deck
 from scripts.utils import load_image, load_images, Animation, load_sound
@@ -28,6 +28,7 @@ class game():
 
         pygame.mixer.music.load('./assets/audio/game_loop.wav')
         pygame.mixer.music.play(-1)
+        self.playing = True
 
         # loading all the assets to prevent lag once game has started
         self.assets = {
@@ -115,8 +116,12 @@ class game():
                     'left' : Animation(load_images('UI/player_name/1', scaling=SIZE), img_dur=10),
                     'right' : Animation(load_images('UI/player_name/2', scaling=SIZE), img_dur=10),
                 },
+                'util_buttons' : {
+                    'back_button' : Animation(load_images('UI/buttons/back_button', scaling=SIZE), img_dur=10),
+                    'mute_button' : Animation(load_images('UI/buttons/voice', scaling=SIZE), img_dur=10)
+                },
                 'tutorial' : Animation(load_images('UI/tutorial', scaling=SIZE, alpha=True), img_dur=10),
-                'credits' : Animation(load_images('UI/credits', scaling=SIZE, alpha=True), img_dur=10)
+                'credits' : Animation(load_images('UI/credits', scaling=SIZE, alpha=True), img_dur=10),
             },
         }
 
@@ -145,6 +150,8 @@ class game():
         # mode dictates what is happening in game
         self.mode = 'menu'
 
+        self.mute = False
+
         # initializing clock
         self.clock = pygame.time.Clock()
 
@@ -168,6 +175,11 @@ class game():
         self.clouds = Particles(self.window.get_size(),{
             'clouds' : self.assets['clouds']
         })
+
+        self.util_buttons = UtilitiesButtons(
+            self,
+            self.assets['UI']['util_buttons']
+        )
 
         # resets parts of game required for new game
         self.reset()
@@ -437,6 +449,16 @@ class game():
             if self.tutorial:
                 self.tut.update()
                 self.tut.render(self.window)
+            else:
+                self.util_buttons.render(self.window)
+                self.util_buttons.update()
+
+            if self.mute:
+                pygame.mixer.music.stop()
+            else:
+                if not self.playing:
+                    pygame.mixer.music.play(-1)
+                    self.playing = True
 
             # updates window
             pygame.display.update()

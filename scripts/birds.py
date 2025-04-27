@@ -67,7 +67,8 @@ class Bird:
                         self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=5)
 
                     case 'stone':
-                        self.game.audio['bomb'].play()
+                        if not self.game.mute:
+                            self.game.audio['bomb'].play()
                         rel_loc = (
                             (self.pos[0] - self.game.get_player_by_id(-1).origin[0] - self.hit_shape[0] / 2) / self.game.get_player_by_id(-1).block_map.tile_size[0],
                             (- self.pos[1] + self.game.get_player_by_id(-1).origin[1] - self.hit_shape[1] / 2) / self.game.get_player_by_id(-1).block_map.tile_size[1],
@@ -83,7 +84,8 @@ class Bird:
                             self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','fast'], num=30 + 10*upgrade_index)
                             if dist < 3:
                                 if (self.game.get_player_by_id(-1).block_map.block_map[block_loc].damage((10 + 30 * (1 - dist/3)) * upgrade_index)):
-                                    self.game.audio[block.type + '_break'].play()
+                                    if not self.game.mute:
+                                        self.game.audio[block.type + '_break'].play()
                                     # runs if block is destroyed
                                     self.game.get_player_by_id(-1).block_map.block_map.pop(block_loc)
                                     # run broken bird shard animation
@@ -170,7 +172,8 @@ class Bird:
                 
                 self.power = True
                 
-                self.game.audio[self.type+'_yell'].play()
+                if not self.game.mute:
+                    self.game.audio[self.type+'_yell'].play()
 
                 self.mode = 'in_air'
                 self.animation = self.game.assets[self.anim_id][self.type]['in_air'].copy()
@@ -270,10 +273,12 @@ class Bird:
                 # adds magic dust effect
                 self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=5)
 
-                self.game.audio['hit'].play()
+                if not self.game.mute:
+                    self.game.audio['hit'].play()
 
                 if block.damage(self.damage(block.type)):
-                    self.game.audio[block.type + '_break'].play()
+                    if not self.game.mute:
+                        self.game.audio[block.type + '_break'].play()
                     # runs if block is destroyed
                     self.game.get_player_by_id(-1).block_map.block_map.pop(loc)
                     # run broken bird shard animation
