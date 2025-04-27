@@ -16,13 +16,19 @@ class Menu:
         self.tutorial_button = pygame.Rect(223*4,149*4,76*4,16*4)
         self.credits_button = pygame.Rect(24*4,149*4,76*4,16*4)
 
+        self.play_clicked = False
+        self.tutorials_clicked = False
+        self.credits_clicked = False
+
     def update(self):
         # check for button press
         if self.play_button.collidepoint(self.game.mpos[0], self.game.mpos[1]):
 
             if pygame.mouse.get_pressed()[0]:
                 self.assets['play_button'].set_frame(21)
-                self.game.audio['button'].play()
+                if not self.play_clicked:
+                    self.game.audio['button'].play()
+                    self.play_clicked = True
 
             elif self.assets['play_button'].get_frame() == 21:
                 self.game.mode='name_input'
@@ -37,7 +43,9 @@ class Menu:
 
             if pygame.mouse.get_pressed()[0]:
                 self.assets['tutorial_button'].set_frame(21)
-                self.game.audio['button'].play()
+                if not self.tutorials_clicked:
+                    self.game.audio['button'].play()
+                    self.tutorials_clicked = True
 
 
             elif self.assets['tutorial_button'].get_frame() == 21:
@@ -53,7 +61,10 @@ class Menu:
 
             if pygame.mouse.get_pressed()[0]:
                 self.assets['credits_button'].set_frame(21)
-                self.game.audio['button'].play()
+                if not self.credits_clicked:
+                    self.game.audio['button'].play()
+                    self.credits_clicked = True
+
 
 
             elif self.assets['credits_button'].get_frame() == 21:
@@ -112,6 +123,7 @@ class NameInput:
         self.player_turn = 0
         self.read = False
 
+
     def take_input(self, event):
 
         if self.read:
@@ -125,6 +137,10 @@ class NameInput:
                         self.name2 = self.name2[:-1]
 
                 elif event.key in [pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_TAB]:
+                    if self.player_turn == 0:
+                        self.game.rating_handler.add_playing(self.name1)
+                    else:
+                        self.game.rating_handler.add_playing(self.name2)
                     self.assets['player_name']['left' if self.player_turn == 0 else 'right'].set_frame(30)
                     self.player_turn += 1
                     self.player_turn %= 2
@@ -216,6 +232,7 @@ class NameInput:
             return self.name1
         else:
             return self.name2
+
         
 class GameOver:
 
@@ -224,14 +241,20 @@ class GameOver:
         self.game = game
         self.assets = {
             'game_over' : assets['game_over'],
-            'winner' : assets['winner'],
+            'player_box' : assets['player_box'],
             'menu_button' : assets['menu_button'].copy(),
             'credits' : assets['credits'].copy(),
         }
 
         # play button rect
         self.menu_button = pygame.Rect(124*4,134*4,74*4,29*4)
-        self.winner = pygame.Rect(82*4,103*4,150*4,15*4)
+        self.winner_name = pygame.Rect(45*4,92*4,150*4,15*4)
+        self.loser_name = pygame.Rect(45*4,111*4,150*4,15*4)
+        self.winner_rating = pygame.Rect(198*4,92*4,77*4,15*4)
+        self.loser_rating = pygame.Rect(198*4,111*4,77*4,15*4)
+        
+    def finish_game(self):
+        self.rating_win, self.rating_lose, self.delta_win, self.delta_lose = self.game.rating_handler.update_rating(self.game.winner,self.game.loser)
 
     def update(self):
         # check for button press
@@ -245,8 +268,8 @@ class GameOver:
 
             elif self.assets['menu_button'].get_frame() == 21 or self.assets['credits'].get_frame() == 21:
                 self.game.audio['button'].play()
-                self.game.reset()
                 self.game.mode='menu'
+                self.game.reset()
 
             else:
                 if self.game.credits:
@@ -270,12 +293,12 @@ class GameOver:
             # blit game over
             surf.blit(
                 self.assets['game_over'],
-                (0, 10*math.sin(pygame.time.get_ticks() / 240))
+                (0, 8*math.sin(pygame.time.get_ticks() / 240))
             )
 
             # blit the winner box
             surf.blit(
-                self.assets['winner'],
+                self.assets['player_box'],
                 (0, 0)
             )
 
@@ -284,13 +307,36 @@ class GameOver:
                 self.assets['menu_button'].img(),
                 (0, 0)
             )
-            
-            text = pygame.font.Font('assets/fonts/custom_font.ttf',size=60).render(self.game.winner, False, 'black')
+            winner_name_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=60).render(self.game.winner, False, 'black')
             surf.blit(
-                text,
+                winner_name_text,
                 (
-                    self.winner.left + 20 + (self.winner.width - text.get_width()) / 2,
-                    self.winner.top + 10,
+                    self.winner_name.left + 20 + (self.winner_name.width - winner_name_text.get_width()) / 2,
+                    self.winner_name.top + 5,
+                )
+            )
+            loser_name_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=60).render(self.game.loser, False, 'black')
+            surf.blit(
+                loser_name_text,
+                (
+                    self.loser_name.left + 20 + (self.loser_name.width - loser_name_text.get_width()) / 2,
+                    self.loser_name.top + 5,
+                )
+            )
+            winner_rating_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=20).render(f"{self.rating_win} (+{self.delta_win})", False, 'black')
+            surf.blit(
+                winner_rating_text,
+                (
+                    self.winner_rating.left + 10 + (self.winner_rating.width - winner_rating_text.get_width()) / 2,
+                    self.winner_rating.top + 20,
+                )
+            )
+            loser_rating_text = pygame.font.Font('assets/fonts/custom_font.ttf',size=20).render(f"{self.rating_lose} ({self.delta_lose})", False, 'black')
+            surf.blit(
+                loser_rating_text,
+                (
+                    self.loser_rating.left + 10 + (self.loser_rating.width - loser_rating_text.get_width()) / 2,
+                    self.loser_rating.top + 20,
                 )
             )
 

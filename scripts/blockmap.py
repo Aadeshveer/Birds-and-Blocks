@@ -8,14 +8,14 @@ HEALTH_MAP = {
 
 BLOCK_INIT_LIST = [
     'glass',
-    'glass',
-    'glass',
-    'stone',
-    'stone',
-    'stone',
-    'wood',
-    'wood',
-    'wood',
+    # 'glass',
+    # 'glass',
+    # 'stone',
+    # 'stone',
+    # 'stone',
+    # 'wood',
+    # 'wood',
+    # 'wood',
 ]
 
 class BlockMap:
@@ -42,8 +42,8 @@ class BlockMap:
 
     def initialize_blocks(self):
         block_init_list = BLOCK_INIT_LIST.copy()
-        for i in range(3):
-            for j in range(3):
+        for i in range(1):
+            for j in range(1):
                 choice = random.choice(block_init_list)
                 self.add_block((i,j), choice)
                 block_init_list.remove(choice)

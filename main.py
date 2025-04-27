@@ -6,6 +6,7 @@ from scripts.player import Player
 from scripts.cards import Deck
 from scripts.utils import load_image, load_images, Animation, load_sound
 from scripts.particles import Particles
+from scripts.rating import ELO
 
 
 SIZE = (1280,720)
@@ -91,7 +92,6 @@ class game():
                 'glass' : Animation(load_images('blocks/glass'), img_dur = 1),
                 'wood' : Animation(load_images('blocks/wood'), img_dur = 1),
                 'stone' : Animation(load_images('blocks/stone'), img_dur = 1),
-                'royal' : Animation(load_images('blocks/royal'), img_dur = 1),
             },
             'effects' : {
                 'dust' : Animation(load_images('effects/dust'), img_dur = 1, loop=False),
@@ -109,7 +109,7 @@ class game():
                 'tutorial_button' : Animation(load_images('UI/menu/tutorial_button', scaling=SIZE), img_dur=10),
                 'credits_button' : Animation(load_images('UI/menu/credits_button', scaling=SIZE), img_dur=10),
                 'game_over' : load_image('UI/game_over/game_over.png', scaling=SIZE),
-                'winner' : load_image('UI/game_over/winner_box.png', scaling=SIZE),
+                'player_box' : load_image('UI/game_over/player_box.png', scaling=SIZE),
                 'menu_button' : Animation(load_images('UI/game_over/menu_button', scaling=SIZE), img_dur=10),
                 'player_name' : {
                     'left' : Animation(load_images('UI/player_name/1', scaling=SIZE), img_dur=10),
@@ -191,11 +191,14 @@ class game():
 
         self.menu = Menu(self, self.assets['UI'])
 
-        self.game_over = GameOver(self, self.assets['UI'])
-
         self.winner = 'None'
+        self.loser = 'None'
+
+        self.rating_handler = ELO('./user_data/players.txt','./user_data/ratings.txt')
 
         self.name_handler = NameInput(self, self.assets['UI'])
+
+        self.game_over = GameOver(self, self.assets['UI'])
 
         self.tut = Tutorial(self, self.assets['UI'])
 
@@ -298,12 +301,17 @@ class game():
 
 # [Updating and rendering the screen] -------------------------------------------------------------------------- #
 
-            if len(self.player1.block_map.block_map) == 0:
-                self.winner = self.name_handler.get_name(1)
-                self.mode = 'game_over'
-            elif len(self.player2.block_map.block_map) == 0:
-                self.winner = self.name_handler.get_name(0)
-                self.mode = 'game_over'
+            if self.mode != 'game_over':
+                if len(self.player1.block_map.block_map) == 0:
+                    self.winner = self.name_handler.get_name(1)
+                    self.loser = self.name_handler.get_name(0)
+                    self.game_over.finish_game()
+                    self.mode = 'game_over'
+                elif len(self.player2.block_map.block_map) == 0:
+                    self.winner = self.name_handler.get_name(0)
+                    self.loser = self.name_handler.get_name(1)
+                    self.game_over.finish_game()
+                    self.mode = 'game_over'
             
             self.clouds.render(self.display)
             self.clouds.update()
@@ -423,8 +431,8 @@ class game():
                 self.menu.render(self.window)
 
             if self.mode in ['game_over']:
-                self.game_over.update()
                 self.game_over.render(self.window)
+                self.game_over.update()
 
             if self.tutorial:
                 self.tut.update()
