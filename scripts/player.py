@@ -1,5 +1,6 @@
 from .blockmap import BlockMap
 from .cards import Deck
+import pygame
 
 class Player:
     '''
@@ -74,7 +75,7 @@ class Player:
                 if self.deck.unpack():
                     self.game.mode = 'card_select'
 
-            if self.game.mode in ['card_select', 'play', 'in_air']:
+            if self.game.mode in ['card_select']:
 
                 if self.deck.active == None:
                     self.game.scrolling = True
@@ -83,3 +84,17 @@ class Player:
                     self.game.scrolling = False
 
                 self.deck.play_deck()
+
+    def render_upgrade_indicators(self, surf):
+        origin1 = (125*2, 333*2)
+        origin2 = (490*2, 333*2)
+        for i,type in enumerate(['basic','glass', 'wood', 'stone']):
+            surf.blit(
+                self.game.assets['projectile' + ('_flipped' if self.identity==1 else '')][type]['upgrade'],
+                (origin1[0] + i * (48 + 20), origin1[1]) if self.identity == 0 else (origin2[0] - i * (48 + 20), origin2[1])
+            )
+            text = pygame.font.Font('assets/fonts/custom_font.ttf',size=20).render(str(self.upgrades[type]), False, "#00ff00")
+            surf.blit(
+                text,
+                (origin1[0] + i * (48 + 20) + 15, origin1[1] + 24) if self.identity == 0 else (origin2[0] - i * (48 + 20) + 25, origin2[1] + 24)
+            )

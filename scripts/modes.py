@@ -253,6 +253,7 @@ class GameOver:
             'player_box' : assets['player_box'],
             'menu_button' : assets['menu_button'].copy(),
             'credits' : assets['credits'].copy(),
+            'pygame' : assets['pygame'],
         }
 
         # play button rect
@@ -298,6 +299,11 @@ class GameOver:
             surf.blit(
                 self.assets['credits'].img(),
                 (0,0)
+            )
+
+            surf.blit(
+                self.assets['pygame'],
+                (40,500)
             )
         else:
             # blit game over
@@ -356,16 +362,29 @@ class Tutorial:
         self.anim = assets['tutorial'].copy()
         self.selection = False
         self.upgradation = True
+        self.start_ctr = 0
         self.cong_ctr = 0
         self.final_ctr = 0
+        self.frame = 0
+        self.new = True
 
     def update(self):
+
+        if self.frame == 100:
+            if pygame.mouse.get_pressed()[0] and self.start_ctr < 1000:
+                self.new = False
+            if self.start_ctr < 60:
+                self.start_ctr += 1
+
         match self.game.mode:
             case 'menu':
                 self.frame = 0
 
             case 'name_input':
-                self.frame = 10
+                if self.new:
+                    self.frame=100
+                else:
+                    self.frame = 10
 
             case 'card_unpack':
                 self.frame = 50
@@ -408,6 +427,7 @@ class Tutorial:
             self.frame = 60
             self.cong_ctr += 1
 
+        print(self.frame, self.new)
         self.anim.set_frame(self.frame)
 
     def render(self,surf):

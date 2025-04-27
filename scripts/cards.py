@@ -115,7 +115,7 @@ class Deck:
             self.rect_list[i].top = (14*self.rect_list[i].top + pos[1]) / 15
             self.pack_ctr += 1
 
-        if self.pack_ctr >= (120 if self.player == 'dealer' else 60):
+        if self.pack_ctr >= (120 if self.player == 'dealer' else 90):
             # reset pack_ctr
             self.pack_ctr = 0
             return True
