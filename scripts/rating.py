@@ -2,10 +2,12 @@ import numpy as np
 import os
 
 class ELO:
-    def __init__(self, user_file, rating_file):
+    def __init__(self, game, user_file, rating_file):
+        self.game = game
         self.user_file=user_file
         self.rating_file=rating_file
         self.load_files()
+        self.cache = {}
     
     def load_files(self):
 
@@ -35,7 +37,7 @@ class ELO:
                 os.mknod(self.rating_file)
 
     def add_playing(self, name):
-        if name not in self.users:
+        if name not in self.users and name != '':
             self.users.append(name)
             self.ratings.append(1000)
     
@@ -44,16 +46,26 @@ class ELO:
         idx_b = self.users.index(loser)
         Ra = self.ratings[idx_a]
         Rb = self.ratings[idx_b]
-        Ea = 1/(1 + 10**((Ra-Rb)/400))
-        Eb = 1/(1 + 10**((Rb-Ra)/400))
+        Ea = 1/(1 + 10**((Rb-Ra)/400))
+        Eb = 1/(1 + 10**((Ra-Rb)/400))
         delta_a = int(32*(1-Ea))
         delta_b = int(32*(0-Eb))
-        self.ratings[idx_a] += delta_a
-        self.ratings[idx_b] += delta_b
-        with open(self.rating_file, 'w') as file:
-            for i in self.ratings:
-                file.write(str(i)+"\n")
-        with open(self.user_file, 'w') as file:
-            for i in self.users:
-                file.write(str(i)+"\n")
+        if not self.game.tutorial:
+            self.ratings[idx_a] += delta_a
+            self.ratings[idx_b] += delta_b
+            with open(self.rating_file, 'w') as file:
+                for i in self.ratings:
+                    file.write(str(i)+"\n")
+            with open(self.user_file, 'w') as file:
+                for i in self.users:
+                    file.write(str(i)+"\n")
         return (Ra, Rb, delta_a, delta_b)
+    
+    def get_rating_str(self, player):
+        if player in self.cache:
+            return ':' + str(self.cache[player]) 
+        elif player in self.users:
+            self.cache[player] = self.ratings[self.users.index(player)]
+            return ':' + str(self.cache[player])
+        else:
+            return ''

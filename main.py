@@ -216,7 +216,7 @@ class game():
         self.winner = 'None'
         self.loser = 'None'
 
-        self.rating_handler = ELO('./user_data/players.txt','./user_data/ratings.txt')
+        self.rating_handler = ELO(self,'./user_data/players.txt','./user_data/ratings.txt')
 
         self.name_handler = NameInput(self, self.assets['UI'])
 
