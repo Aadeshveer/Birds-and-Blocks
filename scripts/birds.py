@@ -2,7 +2,9 @@ import pygame
 import math
 
 VMAX = 14
+GRAVITY = 1/6 # equivalant to 10 per sec
 
+# the visual hit shape of bird first two numbers give its top left corner and third is size of square
 HIT_SHAPE_MAP = {
     'basic' : (22,23,18),
     'wood' : (22,22,21),
@@ -10,6 +12,7 @@ HIT_SHAPE_MAP = {
     'glass' : (16,14,13),
 }
 
+# damage = constant[0] + constant[1] * speed
 DAMAGE_MAP = {
     'basic' : (30,2),
     'wood' : (20,2),
@@ -17,6 +20,7 @@ DAMAGE_MAP = {
     'glass' : (20,2),
 }
 
+# maps the sprite location for strap
 LAUNCHER_STRAP_MAP = {
     'basic' : (14,22),
     'glass' : (8,16),
@@ -24,6 +28,7 @@ LAUNCHER_STRAP_MAP = {
     'stone' : (20,28),
 }
 
+# returns the visual center of bird
 BIRD_CENTER = {
     'basic' : (12,12),
     'glass' : (10,10),
@@ -34,22 +39,27 @@ BIRD_CENTER = {
 class Bird:
 
     def __init__(self, game, map_size, type, origin = (0, 0), mode = 'idle', flip = False, stray = False):
+        '''
+        Initializes the projectile bird object
+        '''
         self.game = game
         self.map_size = map_size
-        self.type = type
         self.origin = origin
+        
         self.pos = origin # original position is provided origin
+        self.type = type
         self.mode = mode
-        self.flip = flip
-        self.stray = stray
+        self.stray = stray # stray projectiles have a very limited functionality and are associated with some real projectile
         self.v = 0 + 0j
+        self.damage_factor = 1
+        self.stray_projectiles = []
+
+        self.flip = flip
         self.hit_shape = HIT_SHAPE_MAP[type] # Helps in forming a rectangle which if hits will cause damage to blocks
         self.anim_id = 'projectile_flipped' if flip else 'projectile' 
         self.animation = self.game.assets[self.anim_id][self.type]['in_air' if self.stray else 'idle'].copy()
         self.width = self.animation.img().get_width()
         self.height = self.animation.img().get_height()
-        self.stray_projectiles = []
-        self.damage_factor = 1
 
     def calculate_next_pos(self):
         '''
@@ -57,67 +67,108 @@ class Bird:
         Returns true if bird is in screen False if offscreen
         '''
         pos = list(self.pos)
+
+        # used to identify if the bird has been upgraded
         upgrade_index = self.game.get_player_by_id().upgrades[self.type]
+        
+        # if upgrade_index > 1 => bird is upgraded and has some special power activated on click
         if pygame.mouse.get_pressed()[0] and upgrade_index > 1:
+
+            # to prevent use of power more than once in a flight
             if self.power:
+
                 match self.type:
                     
                     case 'wood':
+                        # increase the speed of bird thus increasing damage
                         self.v += 4 * (-1 if self.flip else 1) * upgrade_index
+                        # trail of star particles
                         self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=5)
 
                     case 'stone':
+
+                        # blast sound
                         if not self.game.mute:
                             self.game.audio['bomb'].play()
+
+                        # location of center of blast relative to grid
                         rel_loc = (
                             (self.pos[0] - self.game.get_player_by_id(-1).origin[0] - self.hit_shape[0] / 2) / self.game.get_player_by_id(-1).block_map.tile_size[0],
                             (- self.pos[1] + self.game.get_player_by_id(-1).origin[1] - self.hit_shape[1] / 2) / self.game.get_player_by_id(-1).block_map.tile_size[1],
                         )
+
+                        # for blocks in enemy fortress damage it as per (10 + 30 * (1 - dist/3)) * upgrade_index) if it is less than 3 relative units away
                         for block_loc in self.game.get_player_by_id(-1).block_map.block_map.copy():
+                            
                             block = self.game.get_player_by_id(-1).block_map.block_map[block_loc]
+                            # relative center of block
                             loc = (
                                 block_loc[0] + 0.5,
                                 block_loc[1] + 0.5,
                             )
                             dist = math.dist(rel_loc, loc)
-
-                            self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','fast'], num=30 + 10*upgrade_index)
+                            
+                            # adds blast particles capped at 90 to prevent lag at higher levels
+                            self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','fast'], num = max(90,30 + 10*upgrade_index))
+                            
                             if dist < 3:
+
+                                # runs if block breaks
                                 if (self.game.get_player_by_id(-1).block_map.block_map[block_loc].damage((10 + 30 * (1 - dist/3)) * upgrade_index)):
+                                    
                                     if not self.game.mute:
                                         self.game.audio[block.type + '_break'].play()
+
                                     # runs if block is destroyed
                                     self.game.get_player_by_id(-1).block_map.block_map.pop(block_loc)
-                                    # run broken bird shard animation
+                                    
+                                    # run broken block shard animation
                                     self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(-1).block_map.loc_to_pos(block_loc), effects=['gravity', 'sequence', 'radial'])
                         
+                        # takes the bird out of screen killing it
                         pos[0] += self.map_size[0]
 
                     case 'glass':
-                        self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=10)
+                        # halves the damage but triples the number by adding stray projectiles
+                         
                         self.stray_projectiles.append(self.make_stray_projectile(2j))
                         self.stray_projectiles.append(self.make_stray_projectile(-2j))
                         self.damage_factor /= 2
+                        
+                        # adds special effect to the division
+                        self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=10)
 
                     case 'basic':
+                        # just triple the damage every index
+                        self.damage_factor *= 3 * upgrade_index / 2
                         self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=10)
-                        self.damage_factor *= 3
 
+                # power cannot be reactivated
                 self.power = False
+
+        # power has been used
         if not self.power:
+
             match self.type:
+                
                 case 'wood':
+                    # keep adding a trail of particles
                     self.game.particles.add_particles('particle', self.pos, effects = ['radial','random','truncated'], num=1)
+                
                 case 'basic':
+                    # keep adding a trail of particles
                     self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=1)
 
+        # move to next pos
         pos[0] += self.v.real
         pos[1] += self.v.imag
         
-        self.v = self.v.real + 1j * min(self.v.imag + 1/6, 10)
+        # update the velocity
+        self.v = self.v.real + 1j * min(self.v.imag + GRAVITY, 10)
         
         self.pos = tuple(pos)
         
+        # return true if bird is alive
         return (
             0 < self.pos[0] < self.map_size[0] - self.width
             and
@@ -131,8 +182,7 @@ class Bird:
         Manges the bird movement
         Return True if bird is operating
         '''
-
-
+        # keeps bird alive until its strays are alive
         stray_operating = False
         for strays in self.stray_projectiles:
             if strays.update():
@@ -143,9 +193,12 @@ class Bird:
         if self.mode == 'in_air':
             return self.calculate_next_pos() or stray_operating
 
+        # animate bird sitting on slingshot
         if self.mode == 'ready':
+            # for tutorial purpose
             if self.game.tutorial:
                 pygame.draw.circle(self.game.display, 'red', (self.origin[0] + 16, self.origin[1] + 16), 30)
+            
             if (
                 pygame.mouse.get_pressed()[0]
                 and
@@ -153,6 +206,7 @@ class Bird:
             ):
                 self.mode = 'aiming'
 
+        # animate bird in hand of player
         if self.mode == 'aiming':
 
             if pygame.mouse.get_pressed()[0]: # if mouse button is kept pressed
@@ -192,9 +246,11 @@ class Bird:
         '''
         Renders bird on surf and returns a scaling factor for better effect
         '''
+        # first render the strays
         for stray in self.stray_projectiles:
             stray.render()
 
+        # render itself and update the game offset and scaling for better zoom effect
         surf = self.game.display
         present_offset = self.game.off_set
 
@@ -203,7 +259,6 @@ class Bird:
 
         surf.blit(self.animation.img(), self.pos)
         
-
         if self.mode in ['aiming']:
             v = (self.origin[0] - self.game.scaled_mpos[0] + BIRD_CENTER[self.type][0])/5 + 1j * (self.origin[1] - self.game.scaled_mpos[1] + BIRD_CENTER[self.type][1])/5
             modulus = abs(v)
@@ -251,6 +306,7 @@ class Bird:
         
         rel_loc = [] # location of bird vertices of hit box of bird relative to origin
 
+        # define relative locations of edges of bird
         for i in range(2):
 
             for j in range(2):
@@ -261,6 +317,8 @@ class Bird:
                         (- self.pos[1] + origin[1] - self.hit_shape[1] + j * self.hit_shape[2]) // self.game.get_player_by_id(-1).block_map.tile_size[1],
                     )
                 )
+
+        # reset the relative location order for different sidewise priority
         if self.game.get_player_by_id().identity == 1:
             rel_loc = [
                 rel_loc[1],
@@ -275,6 +333,8 @@ class Bird:
                 rel_loc[1],
                 rel_loc[3],
             ]
+
+        # if rel loc of any bird edge is in a block collision occurs
         for loc in rel_loc:
 
             if loc in self.game.get_player_by_id(-1).block_map.block_map: # there is a block placed at given location
@@ -294,7 +354,7 @@ class Bird:
                         self.game.audio[block.type + '_break'].play()
                     # runs if block is destroyed
                     self.game.get_player_by_id(-1).block_map.block_map.pop(loc)
-                    # run broken bird shard animation
+                    # run broken block shard animation
                     self.game.particles.add_particles('shards_' + block.type, self.game.get_player_by_id(-1).block_map.loc_to_pos(loc), effects=['gravity', 'sequence', 'radial'])
                 
                 self.pos = (0,self.map_size[1]) if self.flip else self.map_size
@@ -310,6 +370,9 @@ class Bird:
         return (DAMAGE_MAP[self.type][0] + DAMAGE_MAP[self.type][1] * abs(self.v)) * self.damage_factor * (1.5 if block_type==self.type else 0.7)
     
     def make_stray_projectile(self, vel_offset):
+        '''
+        Generates a stray projectile with limited functionality
+        '''
         projectile = Bird(self.game, self.map_size, self.type, self.origin, self.mode, self.flip, True)
         projectile.pos = self.pos
         projectile.v = self.v + vel_offset
@@ -317,6 +380,9 @@ class Bird:
         return projectile
     
     def strap_back(self, surf):
+        '''
+        Draws the back of strap of slingshot
+        '''
         pygame.draw.polygon(surf, 'brown', [
             (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][0]),
             (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][1]),
@@ -325,6 +391,9 @@ class Bird:
         ])
 
     def strap_front(self, surf):
+        '''
+        Draws the front of strap of slingshot
+        '''
         pygame.draw.polygon(surf, 'brown', [
             (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][0]),
             (self.pos[0] + (3 if self.type not in ['stone'] else 0) * (-1 if self.flip else 1) + (32 if self.flip else 0), self.pos[1] + LAUNCHER_STRAP_MAP[self.type][1]),
