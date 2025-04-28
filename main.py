@@ -7,12 +7,13 @@ from scripts.cards import Deck
 from scripts.utils import load_image, load_images, Animation, load_sound
 from scripts.particles import Particles
 from scripts.rating import ELO
-
+from scripts.loader import assets_loader
 
 SIZE = (1280,720)
 PLAY_MODES = ['card_unpack', 'card_select', 'upgrade_unpack', 'upgrade']
 
 class game():
+
     def __init__(self):
 
         pygame.init()
@@ -23,136 +24,19 @@ class game():
 
         pygame.display.set_caption('Birds and Blocks')
 
-        # window will be the main window to be displayed on scree
+        self.SIZE = SIZE
+
+        # window will be the main window to be displayed on screen
         self.window = pygame.display.set_mode(SIZE)
 
         pygame.mixer.music.load('./assets/audio/game_loop.wav')
         pygame.mixer.music.play(-1)
         self.playing = True
 
-        # loading all the assets to prevent lag once game has started
-        self.assets = {
-            'background' : load_images('background',scaling=SIZE),
-            'launcher' : load_images('projectile_shooter'),
-            'launcher_flipped' : load_images('projectile_shooter', flip = True),
-            'projectile' : {
-                'basic' : {
-                    'idle' : Animation(load_images('projectiles/basic/idle')),
-                    'in_air' : Animation(load_images('projectiles/basic/in_air')),
-                    'feather' : Animation(load_images('projectiles/basic/feather'), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/basic/upgrade/upgrade.png'),
-                },
-                'wood' : {
-                    'idle' : Animation(load_images('projectiles/wood/idle')),
-                    'in_air' : Animation(load_images('projectiles/wood/in_air')),
-                    'feather' : Animation(load_images('projectiles/wood/feather'), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/wood/upgrade/upgrade.png'),
-                },
-                'stone' : {
-                    'idle' : Animation(load_images('projectiles/stone/idle')),
-                    'in_air' : Animation(load_images('projectiles/stone/in_air')),
-                    'feather' : Animation(load_images('projectiles/stone/feather'), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/stone/upgrade/upgrade.png'),
-                },
-                'glass' : {
-                    'idle' : Animation(load_images('projectiles/glass/idle')),
-                    'in_air' : Animation(load_images('projectiles/glass/in_air')),
-                    'feather' : Animation(load_images('projectiles/glass/feather'), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/glass/upgrade/upgrade.png'),
-                },
-            },
-            'projectile_flipped' : {
-                'basic' : {
-                    'idle' : Animation(load_images('projectiles/basic/idle', flip = True)),
-                    'in_air' : Animation(load_images('projectiles/basic/in_air', flip = True)),
-                    'feather' : Animation(load_images('projectiles/basic/feather', flip = True), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/basic/upgrade/upgrade.png', flip=True),
-                },
-                'wood' : {
-                    'idle' : Animation(load_images('projectiles/wood/idle', flip = True)),
-                    'in_air' : Animation(load_images('projectiles/wood/in_air', flip = True)),
-                    'feather' : Animation(load_images('projectiles/wood/feather', flip = True), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/wood/upgrade/upgrade.png', flip=True),
-                },
-                'stone' : {
-                    'idle' : Animation(load_images('projectiles/stone/idle', flip = True)),
-                    'in_air' : Animation(load_images('projectiles/stone/in_air', flip = True)),
-                    'feather' : Animation(load_images('projectiles/stone/feather', flip = True), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/stone/upgrade/upgrade.png', flip=True),
-                },
-                'glass' : {
-                    'idle' : Animation(load_images('projectiles/glass/idle', flip = True)),
-                    'in_air' : Animation(load_images('projectiles/glass/in_air', flip = True)),
-                    'feather' : Animation(load_images('projectiles/glass/feather', flip = True), img_dur=10, loop=False),
-                    'upgrade' : load_image('projectiles/glass/upgrade/upgrade.png', flip=True),
-                },
-            },
-            'cards' : {
-                'basic' : load_image('cards/bird/red/red.png'),
-                'wood' : load_image('cards/bird/wood/wood.png'),
-                'stone' : load_image('cards/bird/stone/stone.png'),
-                'glass' : load_image('cards/bird/glass/glass.png'),
-                'upgrade_basic' : load_image('cards/upgrade/red/red.png'),
-                'upgrade_wood' : load_image('cards/upgrade/wood/wood.png'),
-                'upgrade_stone' : load_image('cards/upgrade/stone/stone.png'),
-                'upgrade_glass' : load_image('cards/upgrade/glass/glass.png'),
-            },
-            'blocks' : {
-                'glass' : Animation(load_images('blocks/glass'), img_dur = 1),
-                'wood' : Animation(load_images('blocks/wood'), img_dur = 1),
-                'stone' : Animation(load_images('blocks/stone'), img_dur = 1),
-            },
-            'effects' : {
-                'dust' : Animation(load_images('effects/dust'), img_dur = 1, loop=False),
-                'particle' : Animation(load_images('effects/particles'), img_dur=3, loop=False)
-            },
-            'shards' : {
-                'glass' : Animation(load_images('effects/shards/glass'), img_dur=10),
-                'wood' : Animation(load_images('effects/shards/wood'), img_dur=10),
-                'stone' : Animation(load_images('effects/shards/stone'), img_dur=10),
-            },
-            'clouds' : Animation(load_images('clouds', scaling=(160,64)), img_dur=10),
-            'UI' : {
-                'title' : load_image('UI/menu/title.png', scaling=SIZE),
-                'play_button' : Animation(load_images('UI/menu/play_button', scaling=SIZE), img_dur=10),
-                'tutorial_button' : Animation(load_images('UI/menu/tutorial_button', scaling=SIZE), img_dur=10),
-                'credits_button' : Animation(load_images('UI/menu/credits_button', scaling=SIZE), img_dur=10),
-                'game_over' : load_image('UI/game_over/game_over.png', scaling=SIZE),
-                'player_box' : load_image('UI/game_over/player_box.png', scaling=SIZE),
-                'menu_button' : Animation(load_images('UI/game_over/menu_button', scaling=SIZE), img_dur=10),
-                'player_name' : {
-                    'left' : Animation(load_images('UI/player_name/1', scaling=SIZE), img_dur=10),
-                    'right' : Animation(load_images('UI/player_name/2', scaling=SIZE), img_dur=10),
-                },
-                'util_buttons' : {
-                    'back_button' : Animation(load_images('UI/buttons/back_button', scaling=SIZE), img_dur=10),
-                    'mute_button' : Animation(load_images('UI/buttons/voice', scaling=SIZE), img_dur=10)
-                },
-                'tutorial' : Animation(load_images('UI/tutorial', scaling=SIZE, alpha=True), img_dur=10),
-                'credits' : Animation(load_images('UI/credits', scaling=SIZE, alpha=True), img_dur=10),
-                'turn_display' : Animation(load_images('UI/turn_display', scaling=SIZE), img_dur=10),
-                'pygame' : load_image('UI/msc/pygame_logo-removebg.png', scaling=(200,80))
-            },
-        }
+        # loads all the assets at once to prevent lag
+        assets_loader(self)
 
-        self.audio = {
-            'glass_break' : load_sound('glass_break'),
-            'stone_break' : load_sound('stone_break'),
-            'wood_break' : load_sound('wood_break'),
-            'glass_yell' : load_sound('glass_yell'),
-            'basic_yell' : load_sound('basic_yell'),
-            'wood_yell' : load_sound('wood_yell'),
-            'stone_yell' : load_sound('stone_yell'),
-            'button' : load_sound('button'),
-            'upgrade' : load_sound('upgrade'),
-            'bomb' : load_sound('bomb'),
-            'hit' : load_sound('hit'),
-        }
-
-        self.fonts = {
-            'monospace' : pygame.font.Font('assets/fonts/custom_font.ttf'),
-        }
-
+        pygame.display.set_icon(self.assets['UI']['icon'])
 
         # all the sprites will be blit on display and rescaled to fit window giving a zoom effect
         self.display = pygame.Surface((1280,720))
@@ -162,7 +46,7 @@ class game():
 
         self.mute = False
 
-        # initializing clock
+        # initializing clock to maintain fps
         self.clock = pygame.time.Clock()
 
         # manages all the simple particles for effects
@@ -186,6 +70,7 @@ class game():
             'clouds' : self.assets['clouds']
         })
 
+        # manages the three square buttons in top corners
         self.util_buttons = UtilitiesButtons(
             self,
             self.assets['UI']['util_buttons']
@@ -195,6 +80,9 @@ class game():
         self.reset()
 
     def reset(self):
+        '''
+        resets the game
+        '''
 
         self.upgrade_cards = Deck(
             self,
@@ -208,6 +96,8 @@ class game():
         )
 
         self.tutorial = False
+
+        self.leaderboard = False
 
         self.credits = False
 
@@ -260,6 +150,7 @@ class game():
 # [Taking input] --------------------------------------------------------------------------------- #
 
             for event in pygame.event.get():
+
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit(0)
@@ -269,10 +160,9 @@ class game():
                     raise Exception('Window resize error')
 
                 if self.mode == 'name_input':
-
                     self.name_handler.take_input(event)
 
-
+            # maintain one variable to store mpos preventing lag due to multiple calling in other functions
             self.mpos = pygame.mouse.get_pos()
             self.scaled_mpos = (
                 (self.mpos[0] - self.off_set[0]) * self.scaling_factor / 2,
@@ -280,7 +170,7 @@ class game():
             )
 
             # scrolls the screen
-            if self.mode in ['card_unpack', 'card_select', 'menu', 'upgrade_unpack', 'upgrade', 'name_input','game_over']:
+            if self.mode in ['card_unpack', 'card_select', 'menu', 'upgrade_unpack', 'upgrade', 'name_input', 'game_over']:
 
                 # value by which offset will move
                 delta = 0
@@ -323,18 +213,24 @@ class game():
 
 # [Updating and rendering the screen] -------------------------------------------------------------------------- #
 
+            # game over condition
             if self.mode != 'game_over':
+
                 if len(self.player1.block_map.block_map) == 0:
+
                     self.winner = self.name_handler.get_name(1)
                     self.loser = self.name_handler.get_name(0)
                     self.game_over.finish_game()
                     self.mode = 'game_over'
+
                 elif len(self.player2.block_map.block_map) == 0:
+
                     self.winner = self.name_handler.get_name(0)
                     self.loser = self.name_handler.get_name(1)
                     self.game_over.finish_game()
                     self.mode = 'game_over'
             
+            # update and render the clouds
             self.clouds.render(self.display)
             self.clouds.update()
 
@@ -352,8 +248,6 @@ class game():
                 if self.mode in ['upgrade_unpack']:
                     if self.upgrade_cards.unpack():
                         self.mode = 'upgrade'
-
-
 
                 # blits arm 1 of slingshot 1
                 self.display.blit(
@@ -430,7 +324,6 @@ class game():
 
 
             # blits the scrolled and scaled display on window
-
             self.window.blit(
                 pygame.transform.scale(
                     self.display,
@@ -442,6 +335,7 @@ class game():
                 self.off_set
             )
 
+            # display the upgrade indicators and turn display
             if self.mode in PLAY_MODES:
                 self.player1.render_upgrade_indicators(self.window)
                 self.player2.render_upgrade_indicators(self.window)
@@ -451,27 +345,34 @@ class game():
                     (0,0),
                 )
 
+            # displays the name and rating of each player
             if self.mode in PLAY_MODES + ['name_input']:
                 self.name_handler.render(self.window)
 
+            # takes in name for name_input
             if self.mode in ['name_input']:
                 self.name_handler.update()
 
+            # displays the menu
             if self.mode in ['menu']:
                 self.menu.update()
                 self.menu.render(self.window)
 
+            # displays the game over window along the new ratings
             if self.mode in ['game_over']:
                 self.game_over.render(self.window)
                 self.game_over.update()
 
+            # puts the tutorial slide mask on game
             if self.tutorial:
                 self.tut.update()
                 self.tut.render(self.window)
+            # displays the util buttons on top
             else:
                 self.util_buttons.render(self.window)
                 self.util_buttons.update()
 
+            # mute main game music
             if self.mute:
                 pygame.mixer.music.stop()
             else:
@@ -504,6 +405,13 @@ class game():
             return self.player2 if self.player_turn == 0 else self.player1
 
         return self.player1 if id == 0 else self.player2
+    
+    def get_font(self, size):
+        '''
+        Return font object of cutom font with given size
+        note that font may break at many values (20, 38 and 60 are safe)
+        '''
+        return pygame.font.Font('assets/fonts/custom_font.ttf',size=size)
 
 while True:
     try:

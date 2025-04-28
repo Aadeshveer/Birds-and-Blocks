@@ -38,7 +38,9 @@ class Deck:
         self.reload_cards()
 
     def reload_cards(self):
-
+        '''
+        Reload cards if new cards are added in cards type list
+        '''
         for card_type in self.cards_types:
 
             self.cards.append(Card(self.game, card_type, self.map_size, self.origin, self.player))
@@ -86,22 +88,27 @@ class Deck:
 
         else:
 
+            # runs when a cards action finishes and resets everything for next player
             if not self.cards[self.active].act():
-                # runs when a cards action finishes and resets everything for next player
+
                 self.cards.pop(self.active)
                 self.rect_list.pop(self.active)
-                self.game.mode = 'card_unpack'
                 self.active = None
+                
+                self.game.mode = 'card_unpack'
                 self.game.player_turn += 1
                 self.game.player_turn %= 2
+                
                 if len(self.game.get_player_by_id().deck.cards) == 0:
                     self.game.mode = 'upgrade_unpack'
                     if len(self.game.get_player_by_id(-1).deck.cards) == 0:
                         self.game.player_turn += 1
                         self.game.player_turn %= 2
+                
                 if len(self.game.upgrade_cards.cards) == 0:
                     self.game.upgrade_cards.cards_types = ['upgrade_wood', 'upgrade_basic', 'upgrade_stone', 'upgrade_glass']
                     self.game.upgrade_cards.reload_cards()
+                
                 self.find_pos()
 
     def unpack(self):
@@ -160,6 +167,7 @@ class Card:
         Returns True if action is in place
         '''
         if self.projectile != None:
+            # card is a projectile card
 
             if pygame.mouse.get_pressed()[1]:
                 self.projectile.mode = 'ready'
@@ -172,11 +180,14 @@ class Card:
             return True
 
         else:
+            # card is a upgrade card
             self.game.get_player_by_id().upgrades[self.type.split('_')[1]] += 1
             self.game.get_player_by_id().deck.cards_types = ['basic', 'wood', 'glass', 'stone']
             self.game.get_player_by_id().deck.reload_cards()
+            
             if not self.game.mute:
                 self.game.audio['upgrade'].play()
+            
             return False
 
     def rect(self, pos):

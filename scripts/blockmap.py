@@ -6,6 +6,7 @@ HEALTH_MAP = {
     'stone' : 95,
 }
 
+# initial blocks that fortress can have
 BLOCK_INIT_LIST = [
     'glass',
     'glass',
@@ -41,9 +42,15 @@ class BlockMap:
             self.initialize_blocks()
 
     def initialize_blocks(self):
+        '''
+        Initialize fortress randomly
+        '''
         block_init_list = BLOCK_INIT_LIST.copy()
+
         for i in range(3):
+        
             for j in range(3):
+        
                 choice = random.choice(block_init_list)
                 self.add_block((i,j), choice)
                 block_init_list.remove(choice)
@@ -100,6 +107,8 @@ class Block:
         Returns if the block is destroyed
         '''
         self.HP -= n
+
         if self.HP <= 0:
             return True
+        
         self.anim.set_frame(5 * (HEALTH_MAP[self.type] - self.HP)//HEALTH_MAP[self.type])

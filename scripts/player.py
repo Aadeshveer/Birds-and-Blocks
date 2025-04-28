@@ -86,6 +86,9 @@ class Player:
                 self.deck.play_deck()
 
     def render_upgrade_indicators(self, surf):
+        '''
+        Manges the rendering of bottom upgrade level indicators
+        '''
         origin1 = (125*2, 333*2)
         origin2 = (490*2, 333*2)
         for i,type in enumerate(['basic','glass', 'wood', 'stone']):
