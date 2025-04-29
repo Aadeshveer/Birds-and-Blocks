@@ -1,5 +1,6 @@
 import pygame as pygame
 import random
+import sys
 
 from scripts.modes import Menu, NameInput, GameOver, Tutorial, UtilitiesButtons
 from scripts.player import Player
@@ -153,7 +154,7 @@ class game():
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    exit(0)
+                    sys.exit()
 
                 # window resize can cause errors in scaling
                 if event.type == pygame.VIDEORESIZE:
