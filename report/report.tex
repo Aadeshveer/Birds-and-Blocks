@@ -77,7 +77,7 @@ The primary objective was to develop a 1v1 fortress destruction game using Pytho
 
 Beyond the basic requirements, this project incorporates several advanced features: a card-based bird upgrade system unlocking special abilities, a persistent ELO rating system with a leaderboard, a dynamic camera, extensive custom pixel art and sound effects, and a contextual tutorial system. This report provides a comprehensive overview.
 
-\vspace{4cm}
+\vspace{2cm}
 
 \section{Modules Used}
 
@@ -185,6 +185,7 @@ python main.py
 The executable was created using PyInstaller, bundling the Python interpreter and necessary libraries.
 
 \subsection{Controls}
+\label{sec:controls}
 
 Controls are the same regardless of the execution method:
 
@@ -196,7 +197,7 @@ Controls are the same regardless of the execution method:
     
     \item[Aiming/Firing:] Left-click and drag bird in slingshot. Release to fire.
     
-    \item[Special Abilities:] Left-click mid-air (if bird upgraded > Level 1).
+    \item[Special Abilities:] Left-click mid-air (if bird upgraded $>$ Level 1).
     
     \item[Sound Toggle:] Left-click speaker icon (top-left).
     
@@ -211,6 +212,31 @@ Controls are the same regardless of the execution method:
 
 This project implements core mechanics and several advanced features.
 
+\subsection{How to Play}
+\label{sec:how_to_play}
+
+The objective of "Birds and Blocks" is to be the first player to completely destroy the opponent's fortress structure using bird projectiles launched from a slingshot.
+
+\begin{itemize}
+
+    \item \textbf{Turns:} The game proceeds in alternating turns between Player 1 and Player 2.
+    
+    \item \textbf{Bird Selection:} At the start of your turn, available bird cards are displayed (typically at the top of the screen). Left-click on a card to select the bird for launching.
+    
+    \item \textbf{Aiming and Firing:} Left-click and drag the selected bird in your slingshot area. A trajectory preview will appear. Pulling farther increases launch power. Release the left mouse button to fire the bird towards the opponent's fortress. You can right-click while aiming to cancel the shot.
+    
+    \item \textbf{Special Abilities:} If a bird type has been upgraded (Level $>$ 1), you can activate its special ability by left-clicking anywhere while the bird is in mid-air (once per shot). See Section \ref{sec:upgrades} for ability details.
+    
+    \item \textbf{Winning:} The first player to destroy all blocks comprising their opponent's fortress wins the game. The game will then transition to the Game Over screen.
+    
+    \item \textbf{Upgrade Phase:} After players exhaust their initial set of bird cards, an upgrade phase occurs where players can choose cards to enhance their birds' abilities for subsequent rounds.
+
+\end{itemize}
+Refer to Section \ref{sec:controls} for detailed button mappings.
+
+
+
+
 \subsection{Game Interface and Flow}
 
 \begin{itemize}
@@ -224,6 +250,23 @@ This project implements core mechanics and several advanced features.
     \item \textbf{Turn Structure:} Alternating turns managed in the main game loop.
 
 \end{itemize}
+
+\subsubsection{Game Fairness Considerations}
+
+Several design choices aim to provide a fair competitive experience:
+
+\begin{itemize}
+    
+    \item \textbf{Fortress:} The core map layout places both players' fortresses and slingshots symmetrically. The blocks are same though in random order to make the game feel new every time and randomness takes care of unsymmetry.
+        
+    \item \textbf{Turn-Based Gameplay:} Strict alternation ensures players have equal action opportunities per round.
+    
+    \item \textbf{Upgrade Opportunity Balancing:} While Player 1 takes the first game turn, fairness in the upgrade system is addressed. When the upgrade phase begins, Player 2 is given the `first choice' from the available upgrade card options. Subsequent upgrade opportunities alternate between players. This specific mechanism aims to counterbalance any slight advantage gained from starting first.
+
+\end{itemize}
+
+These factors contribute to a balanced playing field where victory primarily depends on player skill in aiming, strategic bird/upgrade selection, and understanding projectile interactions.
+
 
 \begin{figure}[H]
 
@@ -263,7 +306,10 @@ This project implements core mechanics and several advanced features.
 
 \end{itemize}
 
+\vspace{1cm}
+
 \subsection{Projectiles (Birds)}
+\label{sec:projectiles}
 
 Four types implemented in \texttt{scripts/birds.py}: Red (balanced), yellow (versus wood), black (versus stone), and blue (versus glass). Damage calculation in \texttt{Bird.damage} includes base damage, speed factor, and type effectiveness multiplier.
 
@@ -271,9 +317,7 @@ Four types implemented in \texttt{scripts/birds.py}: Red (balanced), yellow (ver
 
 Where $c_1$ and $c_2$ are constants for birds, $\vec{v}$ is the velocity vector and $t$ is the type multiplier and $u$ is the upgrade multiplier(\texttt{damage\_factor}) decided based on bird level and use. $t=1.5$ if type of bird is same as block it is about to hit, else $t=0.7$.
 
-\begin{table}[]
-
-    \centering
+\begin{center}
     
     \begin{tabular}{|c||c|c|c|c|c|}
     
@@ -288,16 +332,14 @@ Where $c_1$ and $c_2$ are constants for birds, $\vec{v}$ is the velocity vector 
         \hline
         \textbf{Bomb}  & 20 & 2 & Stone & Blasts to do Area damage\\
         \hline
-    
+
     \end{tabular}
-    
-    \caption{Bird guide}
-    
-    \label{tab:my_label}
-    
-\end{table}
+        
+\end{center}
 
 \footnotetext{Red always induces $t=0.7$ hence absolute damage of red is higher to compensate.}
+
+\vspace{1cm}
 
 \subsection{Fortress (Blocks)}
 
@@ -347,7 +389,10 @@ Managed by \texttt{scripts/blockmap.py}:
 
 \end{figure}
 
+\vspace{1cm}
+
 \subsection{Card \& Upgrade System}
+\label{sec:upgrades}
 
 Introduces strategic depth (\texttt{scripts/cards.py}, \texttt{scripts/player.py}):
 
@@ -355,7 +400,7 @@ Introduces strategic depth (\texttt{scripts/cards.py}, \texttt{scripts/player.py
 
     \item \textbf{Flow:} Players choose bird cards, then upgrade cards after exhausting birds.
     
-    \item \textbf{Abilities (Level $>$ 1):} Activated mid-flight via click: 
+    \item \textbf{Abilities\footnote{More about special abilities and damage can be seen in section \ref{sec:projectiles}.} (Level $>$ 1):} Activated mid-flight via click: 
     
     \begin{description}
     
@@ -388,6 +433,8 @@ Introduces strategic depth (\texttt{scripts/cards.py}, \texttt{scripts/player.py
 
 \end{figure}
 
+\vspace{1cm}
+
 \subsection{ELO Rating System}
 
 Persistent ranking (\texttt{scripts/rating.py}):
@@ -414,6 +461,8 @@ Persistent ranking (\texttt{scripts/rating.py}):
 
 \end{itemize}
 
+\vspace{1cm}
+
 \subsection{Visuals and Audio}
 
 Custom assets provide a unique identity:
@@ -431,6 +480,8 @@ Custom assets provide a unique identity:
     \item \textbf{Animations:} Used for birds, UI, clouds (\texttt{Animation} class). Appendix \ref{app:animation} provides details on its implementation.
 
 \end{itemize}
+
+\vspace{1cm}
 
 \subsection{Dynamic Tutorial/Help}
 
@@ -456,13 +507,15 @@ Contextual guidance (\texttt{scripts/modes.py}):
 
 \end{figure}
 
+\newpage
+
 \subsection{Leaderboard}
 
 Displays player rankings:
 
 \begin{itemize}
 
-    \item \textbf{Access:} Button on main menu.
+    \item \textbf{Access:} Button on main menu(Fig. \ref{fig:main_menu_a}).
     
     \item \textbf{Display:} Shows top players sorted by ELO (Fig. \ref{fig:leaderboard_a}).
 
@@ -479,6 +532,8 @@ Displays player rankings:
     \label{fig:leaderboard_a}
 
 \end{figure}
+
+\newpage
 
 \section{Project Journey}
 
@@ -695,18 +750,16 @@ Using \texttt{pygame.quit()} first is recommended to allow Pygame to clean up it
     
     \item Aseprite (Pixel Art Software): \href{https://www.aseprite.org/}{https://www.aseprite.org/} (Used for asset creation)
     
-    \item Pixabay (Free stock sounds): \href{https://pixabay.com/}{https://pixabay.com/} (Used to find sound effects)
-    
-    \item ELO Rating System (Conceptual understanding): \href{https://en.wikipedia.org/wiki/Elo_rating_system}{https://en.wikipedia.org/wiki/Elo\_rating\_system}
-    
-    \item Original Game Inspiration: Angry Birds 2 - Official Gameplay Trailer \url{https://www.youtube.com/watch?v=17GtzVBX31o}
-    
-    \item Beginner Pygame tutorial by FreeCodeCamp \url{https://www.youtube.com/watch?v=FfWpgLFMI7w}
-    
     \item Advanced Pygame tutorial by DaFluffyPotato \url{https://www.youtube.com/watch?v=2gABYM5M0ww&t=20017s}
     
-    \item Pygame CE vs Pygame Video: \url{https://www.youtube.com/watch?v=FZld3tDEitQ}
+    \item ELO Rating System (Conceptual understanding): \href{https://en.wikipedia.org/wiki/Elo_rating_system}{https://en.wikipedia.org/wiki/Elo\_rating\_system}
+        
+    \item Beginner Pygame tutorial by FreeCodeCamp \url{https://www.youtube.com/watch?v=FfWpgLFMI7w}
+    
+    \item Pixabay (Free stock sounds): \href{https://pixabay.com/}{https://pixabay.com/} (Used to find sound effects)
 
+    \item Stack overflow(For resolving errors and debuggin) \href{https://stackoverflow.com/}{https://stackoverflow.com/}
+    
 \end{itemize}
 
 \end{document}
