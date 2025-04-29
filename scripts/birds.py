@@ -14,7 +14,7 @@ HIT_SHAPE_MAP = {
 
 # damage = constant[0] + constant[1] * speed
 DAMAGE_MAP = {
-    'basic' : (30,2),
+    'basic' : (35,2),
     'wood' : (20,2),
     'stone' : (20,2),
     'glass' : (20,2),
@@ -130,10 +130,10 @@ class Bird:
 
                     case 'glass':
                         # halves the damage but triples the number by adding stray projectiles
-                         
+
                         self.stray_projectiles.append(self.make_stray_projectile(2j))
                         self.stray_projectiles.append(self.make_stray_projectile(-2j))
-                        self.damage_factor /= 2
+                        self.damage_factor /= 4 * upgrade_index
                         
                         # adds special effect to the division
                         self.game.particles.add_particles('dust', self.pos, effects = ['radial','random'], num=10)
@@ -265,7 +265,7 @@ class Bird:
             v /= modulus
             v *= VMAX * (1-math.exp(-modulus))
             for i in range(1, 30, 4):
-                pygame.draw.circle(surf, 'white', (self.origin[0] + v.real*i,self.origin[1] + v.imag*i + 1/12 * i**2), 2 + ( 30 - i ) / 4)
+                pygame.draw.circle(surf, 'white', (self.origin[0] + v.real*i,self.origin[1] + v.imag*i + GRAVITY/2 * i**2), 2 + ( 30 - i ) / 4)
 
 
         if self.mode == 'ready' or self.mode == 'aiming':
